@@ -18,6 +18,11 @@ defmodule MarketMindWeb.Router do
     pipe_through :browser
 
     get "/", PageController, :home
+
+    # Project LiveViews
+    live "/projects", ProjectLive.Index, :index
+    live "/projects/new", ProjectLive.New, :new
+    live "/projects/:slug", ProjectLive.Show, :show
   end
 
   # Other scopes may use custom stacks.
