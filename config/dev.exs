@@ -87,3 +87,9 @@ config :phoenix_live_view,
   debug_attributes: true,
   # Enable helpful, but potentially expensive runtime checks
   enable_expensive_runtime_checks: true
+
+# Swoosh local adapter for development (emails stored in memory, viewable at /dev/mailbox)
+config :market_mind, MarketMind.Mailer, adapter: Swoosh.Adapters.Local
+
+# Disable Swoosh API client in development (we use local adapter)
+config :swoosh, :api_client, false

@@ -74,7 +74,15 @@ defmodule MarketMind.MixProject do
       {:floki, "~> 0.36"},
 
       # Test mocking
-      {:mox, "~> 1.0", only: :test}
+      {:mox, "~> 1.0", only: :test},
+
+      # Email sending (FREE: Mailgun 5k/mo, Brevo 300/day, or local SMTP)
+      {:swoosh, "~> 1.16"},
+      {:gen_smtp, "~> 1.0"},
+      {:hackney, "~> 1.9"},
+
+      # Markdown rendering for lead magnet content
+      {:earmark, "~> 1.4"}
     ]
   end
 
