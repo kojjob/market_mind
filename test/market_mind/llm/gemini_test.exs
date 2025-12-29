@@ -102,7 +102,7 @@ defmodule MarketMind.LLM.GeminiTest do
     test "uses default model when not specified" do
       Req.Test.stub(Gemini, fn conn ->
         # Verify the URL contains the default model
-        assert conn.request_path =~ "gemini-1.5-flash"
+        assert conn.request_path =~ "gemini-2.5-flash"
 
         Req.Test.json(conn, %{
           "candidates" => [
