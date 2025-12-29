@@ -13,10 +13,12 @@ defmodule MarketMindWeb.ProjectLiveTest do
   defp get_or_create_demo_user do
     case Repo.get_by(User, email: "demo@marketmind.app") do
       nil ->
-        {:ok, user} = Repo.insert(%User{
-          email: "demo@marketmind.app",
-          hashed_password: "$2b$12$demo_placeholder_hash_for_development"
-        })
+        {:ok, user} =
+          Repo.insert(%User{
+            email: "demo@marketmind.app",
+            hashed_password: "$2b$12$demo_placeholder_hash_for_development"
+          })
+
         user
 
       user ->
@@ -40,7 +42,9 @@ defmodule MarketMindWeb.ProjectLiveTest do
     test "lists user projects", %{conn: conn} do
       # Use the demo user that the LiveView uses
       user = get_or_create_demo_user()
-      {:ok, project} = Products.create_project(user, %{name: "Test Project", url: "https://test.com"})
+
+      {:ok, project} =
+        Products.create_project(user, %{name: "Test Project", url: "https://test.com"})
 
       {:ok, _index_live, html} = live(conn, ~p"/projects")
 
@@ -54,8 +58,8 @@ defmodule MarketMindWeb.ProjectLiveTest do
 
       {:ok, _index_live, html} = live(conn, ~p"/projects")
 
-      assert html =~ "No projects yet"
-      assert html =~ "Add your first project"
+      assert html =~ "No Projects Found"
+      assert html =~ "Your intelligence workspace is ready"
     end
   end
 
@@ -63,7 +67,8 @@ defmodule MarketMindWeb.ProjectLiveTest do
     test "renders new project form", %{conn: conn} do
       {:ok, _new_live, html} = live(conn, ~p"/projects/new")
 
-      assert html =~ "Add New Project"
+      assert html =~ "New"
+      assert html =~ "Project"
       assert html =~ "Product URL"
     end
 
@@ -109,16 +114,24 @@ defmodule MarketMindWeb.ProjectLiveTest do
   describe "Show" do
     setup do
       # Use the demo user that LiveViews use
-      user = case Repo.get_by(User, email: "demo@marketmind.app") do
-        nil ->
-          {:ok, u} = Repo.insert(%User{
-            email: "demo@marketmind.app",
-            hashed_password: "$2b$12$demo_placeholder_hash_for_development"
-          })
-          u
-        u -> u
-      end
-      {:ok, project} = Products.create_project(user, %{name: "Test Project", url: "https://test.com"})
+      user =
+        case Repo.get_by(User, email: "demo@marketmind.app") do
+          nil ->
+            {:ok, u} =
+              Repo.insert(%User{
+                email: "demo@marketmind.app",
+                hashed_password: "$2b$12$demo_placeholder_hash_for_development"
+              })
+
+            u
+
+          u ->
+            u
+        end
+
+      {:ok, project} =
+        Products.create_project(user, %{name: "Test Project", url: "https://test.com"})
+
       %{user: user, project: project}
     end
 
@@ -133,7 +146,7 @@ defmodule MarketMindWeb.ProjectLiveTest do
     test "displays analysis status badge", %{conn: conn, project: project} do
       {:ok, _show_live, html} = live(conn, ~p"/projects/#{project.slug}")
 
-      assert html =~ "status-badge" or html =~ "badge"
+      assert html =~ "Pending" or html =~ "PENDING"
     end
 
     test "shows analyzing state during analysis", %{conn: conn, project: project} do

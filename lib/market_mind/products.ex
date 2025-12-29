@@ -179,6 +179,15 @@ defmodule MarketMind.Products do
   end
 
   @doc """
+  Updates the analysis data of a project without changing status.
+  """
+  def update_project_analysis(%Project{} = project, attrs) do
+    project
+    |> Project.analysis_changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
   Queues a project for analysis.
 
   Updates the status to "queued" and enqueues an Oban job to perform the analysis.
