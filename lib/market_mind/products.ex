@@ -84,7 +84,13 @@ defmodule MarketMind.Products do
 
   """
   def create_project(user, attrs \\ %{}) do
-    attrs = Map.put(attrs, :user_id, user.id)
+    # Ensure user_id is added with matching key type (string or atom)
+    attrs =
+      if is_map_key(attrs, :name) or attrs == %{} do
+        Map.put(attrs, :user_id, user.id)
+      else
+        Map.put(attrs, "user_id", user.id)
+      end
 
     %Project{}
     |> Project.changeset(attrs)
@@ -128,6 +134,19 @@ defmodule MarketMind.Products do
   end
 
   @doc """
+  Returns an `%Ecto.Changeset{}` for tracking project changes.
+
+  ## Examples
+
+      iex> change_project(project)
+      %Ecto.Changeset{data: %Project{}}
+
+  """
+  def change_project(%Project{} = project, attrs \\ %{}) do
+    Project.changeset(project, attrs)
+  end
+
+  @doc """
   Updates the analysis status of a project.
 
   ## Examples
@@ -156,6 +175,15 @@ defmodule MarketMind.Products do
   def update_analysis_status(%Project{} = project, status, analysis_data) do
     project
     |> Project.analysis_changeset(%{analysis_status: status, analysis_data: analysis_data})
+    |> Repo.update()
+  end
+
+  @doc """
+  Updates the analysis data of a project without changing status.
+  """
+  def update_project_analysis(%Project{} = project, attrs) do
+    project
+    |> Project.analysis_changeset(attrs)
     |> Repo.update()
   end
 

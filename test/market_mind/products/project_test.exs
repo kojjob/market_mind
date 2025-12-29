@@ -60,7 +60,9 @@ defmodule MarketMind.Products.ProjectTest do
       for url <- valid_urls do
         attrs = %{@valid_attrs | url: url}
         changeset = Project.changeset(%Project{}, attrs)
-        assert changeset.valid?, "Expected #{url} to be valid, got errors: #{inspect(errors_on(changeset))}"
+
+        assert changeset.valid?,
+               "Expected #{url} to be valid, got errors: #{inspect(errors_on(changeset))}"
       end
     end
 
@@ -175,10 +177,11 @@ defmodule MarketMind.Products.ProjectTest do
         "tagline" => "Great product"
       }
 
-      changeset = Project.analysis_changeset(project, %{
-        analysis_status: "completed",
-        analysis_data: analysis_data
-      })
+      changeset =
+        Project.analysis_changeset(project, %{
+          analysis_status: "completed",
+          analysis_data: analysis_data
+        })
 
       assert changeset.valid?
       assert get_change(changeset, :analysis_data) == analysis_data

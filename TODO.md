@@ -161,16 +161,16 @@ marketmind/
 #### Personas Context
 | Status | Priority | Task | Hours | Acceptance Criteria |
 |--------|----------|------|-------|---------------------|
-| ⬜ | 🔴 | Create Persona schema | 2 | name, role, project_id, demographics, etc. |
-| ⬜ | 🔴 | Personas table migration | 1 | All fields, JSONB for nested data |
-| ⬜ | 🔴 | Persona CRUD operations | 3 | Full context module |
-| ⬜ | 🔴 | Persona builder skill definition | 3 | Prompt for ICP generation |
-| ⬜ | 🔴 | Generate personas from product | 3 | Oban job using product data |
-| ⬜ | 🔴 | Persona LiveView - List | 3 | Display personas per project |
-| ⬜ | 🔴 | Persona LiveView - Detail | 2 | Full persona view |
-| ⬜ | 🟠 | Persona LiveView - Edit | 2 | Manual adjustments |
-| ⬜ | 🟠 | Mark primary persona | 1 | Toggle in UI |
-| ⬜ | 🟡 | Persona comparison view | 3 | Side-by-side comparison |
+| ✅ | 🔴 | Create Persona schema | 2 | name, role, project_id, demographics, etc. |
+| ✅ | 🔴 | Personas table migration | 1 | All fields, JSONB for nested data |
+| ✅ | 🔴 | Persona CRUD operations | 3 | Full context module |
+| ✅ | 🔴 | Persona builder skill definition | 3 | Prompt for ICP generation |
+| ✅ | 🔴 | Generate personas from product | 3 | Oban job using product data |
+| ✅ | 🔴 | Persona LiveView - List | 3 | Display personas per project |
+| ✅ | 🔴 | Persona LiveView - Detail | 2 | Full persona view |
+| ✅ | 🟠 | Persona LiveView - Edit | 2 | Manual adjustments |
+| ✅ | 🟠 | Mark primary persona | 1 | Toggle in UI |
+| ✅ | 🟡 | Persona comparison view | 3 | Side-by-side comparison |
 
 **Sprint 1.3 Total:** ~23 hours
 

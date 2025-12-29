@@ -16,7 +16,9 @@ defmodule MarketMind.Products.WebsiteFetcher do
   """
 
   @default_timeout 30_000
-  @user_agent "MarketMind Bot/1.0 (+https://marketmind.app)"
+  # Use a browser-like User-Agent to avoid 403 blocks from websites
+  # that filter out bot traffic
+  @user_agent "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 
   @doc """
   Fetches website content and extracts structured data.

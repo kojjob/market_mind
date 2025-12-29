@@ -131,7 +131,8 @@ defmodule MarketMind.Products.WebsiteFetcherTest do
         raise Req.TransportError, reason: :econnrefused
       end)
 
-      assert {:error, {:network_error, :econnrefused}} = WebsiteFetcher.fetch("https://example.com")
+      assert {:error, {:network_error, :econnrefused}} =
+               WebsiteFetcher.fetch("https://example.com")
     end
 
     test "handles invalid URL" do

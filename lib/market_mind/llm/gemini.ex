@@ -26,9 +26,13 @@ defmodule MarketMind.LLM.Gemini do
   @behaviour MarketMind.LLM
 
   @base_url "https://generativelanguage.googleapis.com/v1beta/models"
-  @default_model "gemini-1.5-flash"
+  # Updated to gemini-2.5-flash (latest stable, released June 2025)
+  # Available models: gemini-2.5-flash (latest), gemini-2.0-flash (stable)
+  @default_model "gemini-2.5-flash"
   @default_temperature 0.7
-  @default_max_tokens 2048
+  # Increased from 2048 to allow complete structured JSON responses
+  # Analysis responses can be 3000+ tokens for complex products
+  @default_max_tokens 4096
 
   @doc """
   Completes a prompt and returns the text response.
