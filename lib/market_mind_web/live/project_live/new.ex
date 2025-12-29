@@ -70,7 +70,7 @@ defmodule MarketMindWeb.ProjectLive.New do
                 Deploy our AI engine to dissect your product's market presence and extract strategic insights.
               </p>
             </div>
-            
+
     <!-- Form Card -->
             <div class="relative group animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200">
               <div class="absolute -inset-1 bg-linear-to-r from-primary to-secondary rounded-[4rem] blur opacity-10 group-hover:opacity-20 transition duration-1000">
@@ -148,7 +148,7 @@ defmodule MarketMindWeb.ProjectLive.New do
               </div>
             </div>
           </div>
-          
+
     <!-- Sidebar Tips -->
           <div class="space-y-12 pt-32 animate-in fade-in slide-in-from-right-8 duration-1000 delay-300">
             <div class="space-y-8">
