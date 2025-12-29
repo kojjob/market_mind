@@ -163,6 +163,7 @@ defmodule MarketMindWeb.ProjectLive.Show do
                 contents={@contents}
                 analyzed_at={@project.analyzed_at}
                 loading_agents={@loading_agents}
+                project={@project}
               />
             <% "failed" -> %>
               <.failed_state project={@project} />
@@ -887,7 +888,7 @@ defmodule MarketMindWeb.ProjectLive.Show do
         </div>
       </div>
 
-      <.persona_results personas={@personas} />
+      <.persona_results personas={@personas} project={@project} />
       <.competitor_results competitors={@analysis["competitors"]} />
       <.lead_results leads={@analysis["leads"]} />
       <.content_results content={@analysis["content"]} />
