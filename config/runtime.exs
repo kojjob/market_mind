@@ -73,6 +73,37 @@ if config_env() == :prod do
     ],
     secret_key_base: secret_key_base
 
+  # Email configuration (FREE tiers available)
+  # Option 1: Mailgun (5,000 emails/month free)
+  # Option 2: Brevo/Sendinblue (300 emails/day free)
+  #
+  # Set MAILER_ADAPTER to "mailgun" or "brevo" (defaults to mailgun)
+  mailer_adapter = System.get_env("MAILER_ADAPTER", "mailgun")
+
+  case mailer_adapter do
+    "mailgun" ->
+      config :market_mind, MarketMind.Mailer,
+        adapter: Swoosh.Adapters.Mailgun,
+        api_key: System.get_env("MAILGUN_API_KEY"),
+        domain: System.get_env("MAILGUN_DOMAIN")
+
+    "brevo" ->
+      config :market_mind, MarketMind.Mailer,
+        adapter: Swoosh.Adapters.Sendinblue,
+        api_key: System.get_env("BREVO_API_KEY")
+
+    "local" ->
+      # For testing production config locally
+      config :market_mind, MarketMind.Mailer,
+        adapter: Swoosh.Adapters.Local
+
+    _ ->
+      raise "Unknown MAILER_ADAPTER: #{mailer_adapter}. Use 'mailgun', 'brevo', or 'local'"
+  end
+
+  # Swoosh API client for production
+  config :swoosh, :api_client, Swoosh.ApiClient.Hackney
+
   # ## SSL Support
   #
   # To get SSL working, you will need to add the `https` key

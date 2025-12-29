@@ -25,11 +25,22 @@ import {LiveSocket} from "phoenix_live_view"
 import {hooks as colocatedHooks} from "phoenix-colocated/market_mind"
 import topbar from "../vendor/topbar"
 
+const Search = {
+  mounted() {
+    window.addEventListener("keydown", e => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault()
+        this.el.focus()
+      }
+    })
+  }
+}
+
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: {_csrf_token: csrfToken},
-  hooks: {...colocatedHooks},
+  hooks: {Search, ...colocatedHooks},
 })
 
 // Show progress bar on live navigation and form submits
@@ -80,4 +91,3 @@ if (process.env.NODE_ENV === "development") {
     window.liveReloader = reloader
   })
 }
-

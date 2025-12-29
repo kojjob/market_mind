@@ -54,8 +54,21 @@ config :phoenix, :json_library, Jason
 # Oban background job configuration
 config :market_mind, Oban,
   repo: MarketMind.Repo,
-  plugins: [Oban.Plugins.Pruner],
-  queues: [default: 10, analysis: 5, content: 3]
+  plugins: [
+    Oban.Plugins.Pruner,
+    {Oban.Plugins.Cron,
+     crontab: [
+       # Run sequence scheduler every minute to check for pending emails
+       {"* * * * *", MarketMind.Workers.SequenceSchedulerWorker}
+     ]}
+  ],
+  queues: [default: 10, analysis: 5, content: 3, emails: 5]
+
+# Default from email for sequence emails
+config :market_mind, :default_from_email, "noreply@marketmind.app"
+
+# Swoosh email configuration (default adapter, overridden per environment)
+config :market_mind, MarketMind.Mailer, adapter: Swoosh.Adapters.Local
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

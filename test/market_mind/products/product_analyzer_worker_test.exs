@@ -31,10 +31,11 @@ defmodule MarketMind.Products.ProductAnalyzerWorkerTest do
       })
 
     # Create a project to analyze
-    {:ok, project} = Products.create_project(user, %{
-      name: "Test Product",
-      url: "https://testproduct.example.com"
-    })
+    {:ok, project} =
+      Products.create_project(user, %{
+        name: "Test Product",
+        url: "https://testproduct.example.com"
+      })
 
     %{user: user, project: project}
   end

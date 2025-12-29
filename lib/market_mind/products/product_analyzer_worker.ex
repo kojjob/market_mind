@@ -22,6 +22,7 @@ defmodule MarketMind.Products.ProductAnalyzerWorker do
   alias MarketMind.Products
   alias MarketMind.Products.WebsiteFetcher
   alias MarketMind.LLM.Gemini
+  alias MarketMind.Agents
 
   @analysis_schema %{
     product_name: :string,
@@ -144,7 +145,18 @@ defmodule MarketMind.Products.ProductAnalyzerWorker do
   end
 
   defp complete_analysis(project, analysis_data) do
+    require Logger
     {:ok, updated_project} = Products.update_analysis_status(project, "completed", analysis_data)
+
+    # Trigger persona generation after successful analysis
+    case Agents.run_persona_generation(updated_project) do
+      {:ok, :completed} ->
+        Logger.info("Product analysis and persona generation completed for project #{project.id}")
+
+      {:error, reason} ->
+        Logger.warning("Product analysis completed but persona generation failed for project #{project.id}: #{inspect(reason)}")
+    end
+
     broadcast_completion(updated_project, "completed")
     :ok
   end

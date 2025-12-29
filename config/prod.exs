@@ -21,5 +21,9 @@ config :market_mind, MarketMindWeb.Endpoint,
 # Do not print debug messages in production
 config :logger, level: :info
 
+# Swoosh production config - configured at runtime via environment variables
+# Supports Mailgun (5k/mo free) or Brevo/Sendinblue (300/day free)
+# See config/runtime.exs for actual configuration
+
 # Runtime production configuration, including reading
 # of environment variables, is done on config/runtime.exs.
