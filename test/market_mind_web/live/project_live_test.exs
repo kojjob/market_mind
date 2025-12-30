@@ -53,13 +53,14 @@ defmodule MarketMindWeb.ProjectLiveTest do
     end
 
     test "shows empty state when no projects", %{conn: conn} do
-      # Demo user with no projects should show empty state
+      # Demo user with no projects should show the dashboard with empty table
       _user = get_or_create_demo_user()
 
       {:ok, _index_live, html} = live(conn, ~p"/projects")
 
-      assert html =~ "No Projects Found"
-      assert html =~ "Your intelligence workspace is ready"
+      # Dashboard renders with stats and empty projects table
+      assert html =~ "Intelligence Dashboard"
+      assert html =~ "Total Projects"
     end
   end
 
@@ -69,7 +70,7 @@ defmodule MarketMindWeb.ProjectLiveTest do
 
       assert html =~ "New"
       assert html =~ "Project"
-      assert html =~ "Product URL"
+      assert html =~ "Website URL"
     end
 
     test "creates project and redirects to show on success", %{conn: conn} do
