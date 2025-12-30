@@ -144,6 +144,14 @@ defmodule MarketMindWeb.Public.LeadMagnetLive do
                 <.icon name="hero-arrow-down-tray" class="mr-3 size-6" />
                 Download Now
               </a>
+            <% else %>
+              <a
+                href={~p"/p/#{@project.slug}/#{@lead_magnet.slug}/download/#{@subscriber.id}"}
+                class="inline-flex items-center px-10 py-5 rounded-2xl text-white bg-primary hover:bg-primary/90 transition-all shadow-xl shadow-primary/20 font-bold text-lg"
+              >
+                <.icon name="hero-arrow-down-tray" class="mr-3 size-6" />
+                Download Now
+              </a>
             <% end %>
           </div>
         <% else %>
