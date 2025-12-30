@@ -70,9 +70,16 @@ defmodule MarketMindWeb.Public.UnsubscribeController do
   end
 
   defp fetch_subscriber(token) do
-    case Leads.get_subscriber(token) do
-      nil -> {:error, :not_found}
-      subscriber -> {:ok, subscriber}
+    # Validate UUID format before querying to avoid CastError
+    case Ecto.UUID.cast(token) do
+      {:ok, _uuid} ->
+        case Leads.get_subscriber(token) do
+          nil -> {:error, :not_found}
+          subscriber -> {:ok, subscriber}
+        end
+
+      :error ->
+        {:error, :not_found}
     end
   end
 end

@@ -31,7 +31,8 @@ defmodule MarketMindWeb.ProjectLive.Show do
        |> assign(:project, project)
        |> assign(:personas, Personas.list_personas(project))
        |> assign(:contents, Content.list_contents(project))
-       |> assign(:loading_agents, %{})}
+       |> assign(:loading_agents, %{})
+       |> assign(:active_tab, "overview")}
     else
       {:ok,
        socket
@@ -44,111 +45,81 @@ defmodule MarketMindWeb.ProjectLive.Show do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="relative px-4 sm:px-12 py-12 sm:py-20">
-      <!-- Background Effects -->
-      <div class="fixed inset-0 overflow-hidden pointer-events-none">
-        <div class="absolute top-0 right-0 size-[50%] bg-primary/5 rounded-full blur-[120px]"></div>
-        <div class="absolute bottom-0 left-0 size-[40%] bg-secondary/5 rounded-full blur-[100px]">
-        </div>
-      </div>
+    <Layouts.app current_scope={@current_scope} flash={@flash}>
+      <div class="relative w-full max-w-7xl mx-auto pb-20">
+        <!-- Background Ambient Mesh -->
+        <div class="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-b from-indigo-50/50 via-white to-transparent dark:from-[#122C36] dark:via-[#0B222C] dark:to-[#0B222C] -z-10 blur-3xl opacity-60 pointer-events-none"></div>
+        <div class="absolute -top-20 -right-20 size-96 bg-[#27C281]/10 rounded-full blur-[100px] pointer-events-none"></div>
+        <div class="absolute top-20 -left-20 size-72 bg-blue-500/10 rounded-full blur-[80px] pointer-events-none"></div>
 
-    <!-- Hero Header -->
-      <div class="relative pb-24 overflow-hidden">
-        <div class="max-w-7xl mx-auto relative">
-          <nav class="flex mb-12" aria-label="Breadcrumb">
-            <ol class="flex items-center space-x-4">
-              <li>
-                <.link
-                  navigate={~p"/projects"}
-                  class="text-zinc-500 hover:text-primary transition-colors"
-                >
-                  <.icon name="hero-home" class="size-5" />
-                </.link>
-              </li>
-              <li>
-                <div class="flex items-center">
-                  <.icon name="hero-chevron-right" class="size-4 text-zinc-800" />
-                  <.link
-                    navigate={~p"/projects"}
-                    class="ml-4 text-sm font-black text-zinc-500 hover:text-primary transition-colors"
-                  >
-                    Projects
+        <!-- Header & Breadcrumbs -->
+        <div class="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16 pt-8">
+          <div class="flex-1">
+            <nav class="flex mb-6" aria-label="Breadcrumb">
+              <ol class="inline-flex items-center gap-3">
+                <li>
+                  <.link navigate={~p"/projects"} class="text-xs font-extrabold text-[#A0AEC0] hover:text-[#0B222C] dark:hover:text-white transition-colors uppercase tracking-widest flex items-center gap-2">
+                    <.icon name="hero-squares-2x2" class="size-4" />
+                    Dashboard
                   </.link>
+                </li>
+                <li>
+                  <div class="flex items-center gap-3 text-[#A0AEC0]">
+                    <.icon name="hero-chevron-right" class="size-3 stroke-[3px]" />
+                    <span class="text-xs font-extrabold text-[#0B222C] dark:text-white uppercase tracking-widest bg-white/50 dark:bg-white/5 px-2 py-1 rounded-lg">
+                      {@project.name}
+                    </span>
+                  </div>
+                </li>
+              </ol>
+            </nav>
+
+            <div class="flex items-center gap-8">
+              <div class="relative group">
+                <div class="absolute inset-0 bg-gradient-to-tr from-[#27C281] to-blue-500 rounded-[2rem] blur opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
+                <div class="relative size-24 rounded-[2rem] bg-white dark:bg-[#122C36] flex items-center justify-center shadow-soft border border-[#F1F3F5] dark:border-white/5 z-10 group-hover:scale-105 transition-transform duration-300">
+                  <div class="absolute inset-0 rounded-[2rem] bg-gradient-to-br from-white/40 to-transparent dark:from-white/5 dark:to-transparent pointer-events-none"></div>
+                  <.icon name="hero-bolt" class="size-10 text-[#0B222C] dark:text-white" />
                 </div>
-              </li>
-              <li>
-                <div class="flex items-center">
-                  <.icon name="hero-chevron-right" class="size-4 text-zinc-800" />
-                  <span class="ml-4 text-sm font-black text-white">
-                    {@project.name}
+              </div>
+
+              <div class="space-y-3">
+                <h1 class="text-5xl font-black text-[#0B222C] dark:text-white tracking-tight leading-none drop-shadow-sm">
+                  {@project.name}
+                </h1>
+                <div class="flex items-center gap-4">
+                  <.status_badge status={@project.analysis_status} />
+                  <div class="h-1.5 w-1.5 rounded-full bg-[#A0AEC0]"></div>
+                  <span class="text-xs font-bold text-[#A0AEC0] uppercase tracking-widest flex items-center gap-2">
+                    <.icon name="hero-link" class="size-3" />
+                    {@project.url}
                   </span>
                 </div>
-              </li>
-            </ol>
-          </nav>
-
-          <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-12">
-            <div class="space-y-8 max-w-4xl">
-              <div class="flex items-center gap-6">
-                <div class="size-20 rounded-[2rem] bg-linear-to-br from-primary to-secondary flex items-center justify-center shadow-2xl shadow-primary/20">
-                  <.icon name="hero-briefcase" class="size-10 text-white" />
-                </div>
-                <.status_indicator status={@project.analysis_status} />
               </div>
-
-              <h1 class="text-6xl sm:text-8xl font-black tracking-tighter leading-[0.9]">
-                {@project.name}
-              </h1>
-
-              <div class="flex flex-wrap items-center gap-8">
-                <a
-                  href={@project.url}
-                  target="_blank"
-                  class="group flex items-center gap-3 text-xl font-black text-primary hover:text-primary/80 transition-colors"
-                >
-                  {@project.url}
-                  <.icon
-                    name="hero-arrow-top-right-on-square"
-                    class="size-6 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform"
-                  />
-                </a>
-                <div class="h-8 w-px bg-zinc-800"></div>
-                <div class="flex items-center gap-3 text-zinc-500 font-bold">
-                  <.icon name="hero-calendar" class="size-6" />
-                  Added {Calendar.strftime(@project.inserted_at, "%b %d, %Y")}
-                </div>
-              </div>
-
-              <%= if @project.description do %>
-                <p class="text-2xl text-zinc-400 leading-relaxed font-medium">
-                  {@project.description}
-                </p>
-              <% end %>
-            </div>
-
-            <div class="flex flex-wrap gap-4">
-              <%= if @project.analysis_status in ["completed", "failed"] do %>
-                <button
-                  phx-click="reanalyze"
-                  class="inline-flex items-center gap-3 px-10 py-5 rounded-2xl bg-white text-zinc-950 font-black text-xl hover:scale-105 active:scale-95 transition-all shadow-2xl shadow-white/10"
-                >
-                  <.icon name="hero-arrow-path" class="size-6" /> Re-analyze
-                </button>
-              <% end %>
-              <button
-                disabled
-                class="inline-flex items-center gap-3 px-10 py-5 rounded-2xl bg-zinc-900 text-zinc-600 font-black text-xl cursor-not-allowed border border-white/5"
-              >
-                <.icon name="hero-pencil-square" class="size-6" /> Edit
-              </button>
             </div>
           </div>
-        </div>
-      </div>
 
-    <!-- Content Section -->
-      <div class="max-w-7xl mx-auto pb-24 relative z-10">
-        <div id="analysis-container" phx-update="replace">
+          <div class="flex items-center gap-4 pb-2">
+            <%= if @project.analysis_status in ["completed", "failed"] do %>
+              <button
+                phx-click="reanalyze"
+                class="glass-panel px-6 py-4 rounded-2xl shadow-sm hover:shadow-md text-xs font-extrabold text-[#0B222C] dark:text-white transition-all uppercase tracking-widest hover:-translate-y-1 flex items-center gap-2"
+              >
+                <.icon name="hero-arrow-path" class="size-4" /> Re-analyze
+              </button>
+            <% end %>
+            <a
+              href={@project.url}
+              target="_blank"
+              class="relative px-8 py-4 bg-[#0B222C] dark:bg-[#27C281] text-white dark:text-[#0B222C] rounded-2xl shadow-xl shadow-[#0B222C]/20 dark:shadow-[#27C281]/20 text-xs font-extrabold hover:-translate-y-1 hover:shadow-2xl transition-all uppercase tracking-widest flex items-center gap-2 overflow-hidden group"
+            >
+              <div class="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+              <.icon name="hero-arrow-top-right-on-square" class="size-4" /> Visit Site
+            </a>
+          </div>
+        </div>
+
+        <div id="analysis-container" phx-update="replace" class="animate-in fade-in slide-in-from-bottom-8 duration-700">
           <%= case @project.analysis_status do %>
             <% "pending" -> %>
               <.pending_state />
@@ -164,6 +135,7 @@ defmodule MarketMindWeb.ProjectLive.Show do
                 analyzed_at={@project.analyzed_at}
                 loading_agents={@loading_agents}
                 project={@project}
+                active_tab={@active_tab}
               />
             <% "failed" -> %>
               <.failed_state project={@project} />
@@ -172,53 +144,44 @@ defmodule MarketMindWeb.ProjectLive.Show do
           <% end %>
         </div>
       </div>
-    </div>
+    </Layouts.app>
     """
   end
 
   # Status Components
 
-  defp status_indicator(assigns) do
-    config =
+  defp status_badge(assigns) do
+    {color_class, text, dot_color} =
       case assigns.status do
-        "pending" ->
-          %{color: "bg-amber-400", text: "Pending", icon: "hero-clock"}
-
-        "queued" ->
-          %{color: "bg-blue-400", text: "Queued", icon: "hero-list-bullet"}
-
-        "analyzing" ->
-          %{color: "bg-primary", text: "Analyzing", icon: "hero-arrow-path", animate: true}
-
-        "completed" ->
-          %{color: "bg-emerald-500", text: "Completed", icon: "hero-check-circle"}
-
-        "failed" ->
-          %{color: "bg-rose-500", text: "Failed", icon: "hero-exclamation-triangle"}
-
-        _ ->
-          %{color: "bg-zinc-400", text: "Unknown", icon: "hero-question-mark-circle"}
+        "pending" -> {"bg-gray-100/50 text-gray-500 dark:bg-white/5 dark:text-gray-400", "Pending", "bg-gray-400"}
+        "queued" -> {"bg-blue-50/50 text-blue-500 dark:bg-blue-500/10 dark:text-blue-400", "Queued", "bg-blue-500"}
+        "analyzing" -> {"bg-amber-50/50 text-amber-500 dark:bg-amber-500/10 dark:text-amber-400", "Analyzing", "bg-amber-500"}
+        "completed" -> {"bg-[#27C281]/10 text-[#27C281]", "Completed", "bg-[#27C281]"}
+        "failed" -> {"bg-red-50/50 text-red-500 dark:bg-red-500/10 dark:text-red-400", "Failed", "bg-red-500"}
+        _ -> {"bg-gray-100/50 text-gray-500", "Unknown", "bg-gray-400"}
       end
 
-    assigns = assign(assigns, :config, config)
+    assigns = assign(assigns, color_class: color_class, text: text, dot_color: dot_color)
 
     ~H"""
-    <div class="inline-flex items-center gap-3 px-6 py-3 rounded-full bg-white/5 border border-white/10 backdrop-blur-xl shadow-2xl">
-      <div class={["size-2.5 rounded-full", @config.color, @config[:animate] && "animate-pulse"]}>
-      </div>
-      <span class="text-xs font-black uppercase tracking-[0.3em] text-zinc-300">{@config.text}</span>
-    </div>
+    <span class={["pl-2.5 pr-4 py-1.5 rounded-full text-[0.65rem] font-extrabold uppercase tracking-[0.15em] shadow-sm backdrop-blur-md flex items-center gap-2 border border-black/5 dark:border-white/5", @color_class]}>
+      <span class={["size-2 rounded-full animate-pulse", @dot_color]}></span>
+      {@text}
+    </span>
     """
   end
 
   defp pending_state(assigns) do
     ~H"""
-    <div class="rounded-[3rem] bg-white/5 border border-white/10 backdrop-blur-xl p-24 text-center shadow-2xl">
-      <div class="mx-auto size-24 rounded-3xl bg-amber-500/10 flex items-center justify-center text-amber-500 mb-8">
-        <.icon name="hero-clock" class="size-12" />
+    <div class="glass-card rounded-[2.5rem] p-24 text-center">
+      <div class="relative size-32 mx-auto mb-12">
+        <div class="absolute inset-0 bg-[#A0AEC0]/10 rounded-full animate-pulse-soft blur-xl"></div>
+        <div class="relative size-32 rounded-full bg-white dark:bg-[#122C36] shadow-soft flex items-center justify-center text-[#A0AEC0] border border-[#F1F3F5] dark:border-white/5">
+          <.icon name="hero-clock" class="size-14" />
+        </div>
       </div>
-      <h2 class="text-4xl font-black mb-4">Waiting to Start</h2>
-      <p class="text-xl text-zinc-500 max-w-md mx-auto leading-relaxed">
+      <h3 class="text-3xl font-black text-[#0B222C] dark:text-white tracking-tight mb-4">Awaiting Analysis</h3>
+      <p class="text-base font-bold text-[#A0AEC0] max-w-md mx-auto leading-relaxed">
         Your project is in the system and waiting for the analysis engine to pick it up.
       </p>
     </div>
@@ -227,12 +190,15 @@ defmodule MarketMindWeb.ProjectLive.Show do
 
   defp queued_state(assigns) do
     ~H"""
-    <div class="rounded-[3rem] bg-white/5 border border-white/10 backdrop-blur-xl p-24 text-center shadow-2xl">
-      <div class="mx-auto size-24 rounded-3xl bg-blue-500/10 flex items-center justify-center text-blue-500 mb-8">
-        <.icon name="hero-list-bullet" class="size-12" />
+    <div class="glass-card rounded-[2.5rem] p-24 text-center">
+      <div class="relative size-32 mx-auto mb-12">
+        <div class="absolute inset-0 bg-blue-500/10 rounded-full animate-pulse-soft blur-xl"></div>
+        <div class="relative size-32 rounded-full bg-white dark:bg-[#122C36] shadow-soft flex items-center justify-center text-blue-500 border border-[#F1F3F5] dark:border-white/5">
+          <.icon name="hero-queue-list" class="size-14" />
+        </div>
       </div>
-      <h2 class="text-4xl font-black mb-4">In the Queue</h2>
-      <p class="text-xl text-zinc-500 max-w-md mx-auto leading-relaxed">
+      <h3 class="text-3xl font-black text-[#0B222C] dark:text-white tracking-tight mb-4">Analysis Queued</h3>
+      <p class="text-base font-bold text-[#A0AEC0] max-w-md mx-auto leading-relaxed">
         We've received your request. Analysis will begin as soon as a worker is available.
       </p>
     </div>
@@ -241,26 +207,42 @@ defmodule MarketMindWeb.ProjectLive.Show do
 
   defp analyzing_state(assigns) do
     ~H"""
-    <div class="rounded-[3rem] bg-white/5 border border-white/10 backdrop-blur-xl p-24 text-center shadow-2xl overflow-hidden relative">
-      <div class="absolute inset-0 bg-linear-to-r from-primary/10 via-transparent to-secondary/10 animate-pulse">
+    <div class="glass-card rounded-[2.5rem] p-24 text-center relative overflow-hidden group">
+      <!-- Shimmer Progress Top -->
+      <div class="absolute top-0 left-0 w-full h-1">
+        <div class="h-full bg-gradient-to-r from-transparent via-[#27C281] to-transparent animate-shimmer"></div>
       </div>
-      <div class="relative">
-        <div class="mx-auto size-32 rounded-full border-8 border-white/5 border-t-primary animate-spin mb-12">
+
+      <div class="relative z-10">
+        <div class="relative size-32 mx-auto mb-12">
+          <div class="absolute inset-0 bg-[#27C281]/20 rounded-full animate-ping opacity-20"></div>
+          <div class="relative size-32 rounded-full bg-white dark:bg-[#122C36] shadow-soft flex items-center justify-center text-[#27C281] border border-[#F1F3F5] dark:border-white/5">
+             <.icon name="hero-arrow-path" class="size-14 animate-spin" />
+          </div>
         </div>
-        <h2 class="text-4xl font-black mb-4">Analyzing Your Product</h2>
-        <p class="text-xl text-zinc-500 max-w-md mx-auto leading-relaxed mb-12">
-          Our AI is currently crawling your website and extracting key marketing insights.
+        <h3 class="text-3xl font-black text-[#0B222C] dark:text-white tracking-tight mb-4">Analyzing Your Product</h3>
+        <p class="text-base font-bold text-[#A0AEC0] max-w-md mx-auto leading-relaxed mb-12">
+          Our AI is currently crawling your website and generating tailored insights for your market.
         </p>
-        <div class="flex flex-wrap justify-center gap-6">
-          <div class="flex items-center gap-3 px-8 py-4 rounded-2xl bg-white/5 text-zinc-400 font-black">
-            <.icon name="hero-globe-alt" class="size-6" /> Fetching Content
-          </div>
-          <div class="flex items-center gap-3 px-8 py-4 rounded-2xl bg-primary/20 text-primary font-black ring-2 ring-primary/30">
-            <.icon name="hero-sparkles" class="size-6 animate-bounce" /> AI Processing
-          </div>
-          <div class="flex items-center gap-3 px-8 py-4 rounded-2xl bg-white/5 text-zinc-400 font-black opacity-50">
-            <.icon name="hero-document-text" class="size-6" /> Generating Report
-          </div>
+
+        <div class="flex flex-wrap justify-center gap-4">
+          <%= for {icon, label, active} <- [
+            {"hero-globe-alt", "Crawling Pages", true},
+            {"hero-user-group", "Generating Personas", true},
+            {"hero-document-text", "Generating Report", false}
+          ] do %>
+            <div class={[
+              "px-6 py-3 rounded-2xl border flex items-center gap-3 text-xs font-extrabold uppercase tracking-widest transition-all",
+              if(active, do: "bg-white dark:bg-[#122C36] border-[#27C281]/30 text-[#0B222C] dark:text-white shadow-lg shadow-[#27C281]/10", else: "bg-transparent border-dashed border-[#A0AEC0]/30 text-[#A0AEC0] opacity-60")
+            ]}>
+              <%= if active do %>
+                <div class="size-2 rounded-full bg-[#27C281] animate-pulse"></div>
+              <% else %>
+                <.icon name={icon} class="size-4" />
+              <% end %>
+              {label}
+            </div>
+          <% end %>
         </div>
       </div>
     </div>
@@ -269,654 +251,222 @@ defmodule MarketMindWeb.ProjectLive.Show do
 
   defp completed_state(assigns) do
     ~H"""
-    <div class="space-y-16 animate-in fade-in slide-in-from-bottom-8 duration-1000">
-      <!-- Product Overview Card -->
-      <div class="group relative">
-        <div class="absolute -inset-1 bg-linear-to-r from-primary to-secondary rounded-[4rem] blur opacity-10 group-hover:opacity-20 transition duration-1000">
-        </div>
-        <div class="relative rounded-[4rem] bg-white/5 border border-white/10 backdrop-blur-2xl overflow-hidden shadow-2xl">
-          <div class="p-12 sm:p-20">
-            <div class="flex flex-col md:flex-row md:items-end justify-between gap-12 mb-20">
-              <div class="space-y-6">
-                <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/20 text-primary text-xs font-black uppercase tracking-[0.3em] ring-1 ring-primary/30">
-                  Product Identity
-                </div>
-                <h2 class="text-6xl font-black tracking-tighter">
-                  {@analysis["product_name"]}
-                </h2>
-                <p class="text-4xl text-primary font-black italic tracking-tight leading-none">
-                  "{@analysis["tagline"]}"
-                </p>
-              </div>
-              <div class="flex flex-wrap gap-4">
-                <div class="px-8 py-4 rounded-2xl bg-white/5 border border-white/10 text-white font-black text-sm uppercase tracking-widest">
-                  {@analysis["pricing_model"]}
-                </div>
-                <div class="px-8 py-4 rounded-2xl bg-white/5 border border-white/10 text-white font-black text-sm uppercase tracking-widest">
-                  {@analysis["tone"]}
-                </div>
-              </div>
-            </div>
-
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-24">
-              <div class="space-y-12">
-                <div class="space-y-6">
-                  <h3 class="text-xs font-black text-zinc-500 uppercase tracking-[0.4em]">
-                    Target Audience
-                  </h3>
-                  <p class="text-2xl text-zinc-300 leading-relaxed font-medium">
-                    {@analysis["target_audience"]}
-                  </p>
-                </div>
-
-                <div class="space-y-6">
-                  <h3 class="text-xs font-black text-zinc-500 uppercase tracking-[0.4em]">
-                    Industries
-                  </h3>
-                  <div class="flex flex-wrap gap-4">
-                    <%= for industry <- @analysis["industries"] || [] do %>
-                      <span class="px-6 py-3 rounded-2xl bg-white/5 border border-white/10 text-zinc-300 font-black text-sm hover:border-primary/50 transition-colors">
-                        {industry}
-                      </span>
-                    <% end %>
-                  </div>
-                </div>
-              </div>
-
-              <div class="space-y-12">
-                <div class="space-y-8">
-                  <div class="flex items-center gap-4">
-                    <div class="size-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
-                      <.icon name="hero-bolt" class="size-5" />
-                    </div>
-                    <h3 class="text-xs font-black text-zinc-500 uppercase tracking-[0.4em]">
-                      Value Propositions
-                    </h3>
-                  </div>
-
-                  <div class="grid grid-cols-1 gap-6">
-                    <%= for vp <- @analysis["value_propositions"] || [] do %>
-                      <div class="group/vp relative">
-                        <div class="absolute -inset-0.5 bg-linear-to-r from-primary/20 to-transparent rounded-3xl opacity-0 group-hover/vp:opacity-100 transition duration-500">
-                        </div>
-                        <div class="relative p-8 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-xl hover:bg-white/10 transition-all duration-500">
-                          <div class="flex gap-6 items-start">
-                            <div class="size-10 rounded-xl bg-zinc-900 border border-white/10 flex items-center justify-center shrink-0 group-hover/vp:scale-110 group-hover/vp:rotate-3 transition-all duration-500">
-                              <.icon name="hero-check" class="size-5 text-primary" />
-                            </div>
-                            <p class="text-xl font-black text-white leading-relaxed">
-                              {vp}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    <% end %>
-                  </div>
-                </div>
-              </div>
-            </div>
+    <div class="flex flex-col lg:flex-row gap-8">
+      <div class="flex-1 space-y-8">
+        <!-- Floating Glass Tabs Navigation -->
+        <div class="sticky top-4 z-20 flex justify-center pb-4">
+          <div class="glass-panel p-1.5 rounded-full shadow-lg border border-white/20 dark:border-white/5 backdrop-blur-2xl inline-flex items-center gap-1 overflow-x-auto max-w-full no-scrollbar">
+            <%= for {id, label, icon} <- [
+              {"overview", "Overview", "hero-squares-2x2"},
+              {"personas", "Personas", "hero-user-group"},
+              {"competitors", "Competitors", "hero-magnifying-glass"},
+              {"leads", "Leads", "hero-user-plus"},
+              {"content", "Content", "hero-megaphone"},
+              {"cro", "CRO", "hero-presentation-chart-line"},
+              {"aeo", "AEO", "hero-cpu-chip"}
+            ] do %>
+              <button
+                phx-click="switch_tab"
+                phx-value-tab={id}
+                class={[
+                  "flex items-center gap-2 px-5 py-2.5 text-[0.7rem] font-black transition-all rounded-full whitespace-nowrap uppercase tracking-widest relative group overflow-hidden",
+                  @active_tab == id && "bg-[#0B222C] dark:bg-[#27C281] text-white dark:text-[#0B222C] shadow-lg shadow-[#0B222C]/20 dark:shadow-[#27C281]/30",
+                  @active_tab != id && "text-[#A0AEC0] hover:text-[#0B222C] dark:hover:text-white hover:bg-white/50 dark:hover:bg-white/5"
+                ]}
+              >
+                <%= if @active_tab == id do %>
+                   <div class="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent pointer-events-none"></div>
+                <% end %>
+                <.icon name={icon} class="size-4" />
+                {label}
+              </button>
+            <% end %>
           </div>
         </div>
-      </div>
 
-    <!-- Key Features Grid -->
-      <div class="space-y-16">
-        <div class="flex flex-col md:flex-row md:items-end justify-between gap-8">
-          <div>
-            <div class="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-secondary/10 text-secondary text-[10px] font-black uppercase tracking-[0.3em] mb-8 ring-1 ring-secondary/20">
-              <.icon name="hero-cpu-chip" class="size-4" /> Core Capabilities
-            </div>
-            <h3 class="text-5xl sm:text-6xl font-black tracking-tighter">
-              Key
-              <span class="text-transparent bg-clip-text bg-linear-to-r from-white to-white/40">
-                Features
-              </span>
-            </h3>
-          </div>
-          <p class="text-xl text-zinc-500 font-medium max-w-md leading-relaxed">
-            A deep dive into the functional architecture and user-facing capabilities of the product.
-          </p>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          <%= for feature <- @analysis["key_features"] || [] do %>
-            <div class="group/feature relative">
-              <div class="absolute -inset-1 bg-linear-to-br from-secondary/20 to-transparent rounded-[3rem] blur-xl opacity-0 group-hover/feature:opacity-100 transition duration-700">
-              </div>
-              <div class="relative h-full rounded-[3rem] bg-zinc-900/50 border border-white/10 p-12 backdrop-blur-3xl hover:border-secondary/50 transition-all duration-500 flex flex-col">
-                <div class="size-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-secondary mb-10 group-hover/feature:scale-110 group-hover/feature:rotate-3 transition-all duration-500 shadow-2xl">
-                  <.icon name="hero-sparkles" class="size-8" />
-                </div>
-                <h4 class="text-3xl font-black mb-6 group-hover/feature:text-secondary transition-colors leading-tight">
-                  {feature["name"]}
-                </h4>
-                <p class="text-zinc-400 font-bold text-lg leading-relaxed">
-                  {feature["description"]}
-                </p>
-                <div class="mt-auto pt-10">
-                  <div class="h-1 w-12 bg-secondary/20 rounded-full group-hover/feature:w-full transition-all duration-700">
-                  </div>
-                </div>
-              </div>
-            </div>
+        <div class="tab-content animate-in slide-in-from-bottom-8 duration-700">
+          <%= case @active_tab do %>
+            <% "overview" -> %>
+              <.overview_tab analysis={@analysis} analyzed_at={@analyzed_at} loading_agents={@loading_agents} personas={@personas} />
+            <% "personas" -> %>
+              <.persona_results personas={@personas} project={@project} loading={@loading_agents["personas"]} />
+            <% "competitors" -> %>
+              <.competitor_results competitors={@analysis["competitors"]} loading={@loading_agents["competitors"]} />
+            <% "leads" -> %>
+              <.lead_results leads={@analysis["leads"]} loading={@loading_agents["leads"]} />
+            <% "content" -> %>
+              <.content_results content={@analysis["content"]} loading={@loading_agents["content"]} />
+            <% "cro" -> %>
+              <.cro_results audit={@analysis["cro_audit"]} loading={@loading_agents["cro"]} />
+            <% "aeo" -> %>
+              <.aeo_results aeo={@analysis["aeo_strategy"]} loading={@loading_agents["aeo"]} />
           <% end %>
         </div>
       </div>
 
-    <!-- Differentiators -->
-      <div class="relative group">
-        <div class="absolute -inset-1 bg-linear-to-r from-primary/20 to-secondary/20 rounded-[4rem] blur-2xl opacity-50 group-hover:opacity-75 transition duration-1000">
-        </div>
-        <div class="relative rounded-[4rem] bg-zinc-900/50 border border-white/10 backdrop-blur-3xl p-16 sm:p-24 overflow-hidden shadow-2xl">
-          <!-- Decorative background elements -->
-          <div class="absolute top-0 right-0 size-96 bg-primary/10 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2">
+      <!-- Right Column: Summary & Actions -->
+      <div class="w-full lg:w-[350px] space-y-8">
+        <div class="glass-card rounded-[2.5rem] p-8 relative overflow-hidden group">
+          <div class="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+            <.icon name="hero-chart-bar-square" class="size-48" />
           </div>
-          <div class="absolute bottom-0 left-0 size-96 bg-secondary/10 rounded-full blur-[120px] translate-y-1/2 -translate-x-1/2">
+          <div class="relative z-10">
+            <h3 class="text-[0.65rem] font-extrabold text-[#A0AEC0] uppercase tracking-widest mb-8 flex items-center gap-2">
+              <div class="size-1.5 rounded-full bg-[#27C281] animate-pulse"></div> Analysis Summary
+            </h3>
+            <div class="space-y-6">
+              <%= for {icon, label, count, color, bg_color} <- [
+                {"hero-user-group", "Personas", Enum.count(@personas), "text-indigo-500", "bg-indigo-50 dark:bg-indigo-500/10"},
+                {"hero-magnifying-glass", "Competitors", Enum.count(@analysis["competitors"] || []), "text-blue-500", "bg-blue-50 dark:bg-blue-500/10"},
+                {"hero-user-plus", "strategies", Enum.count(@analysis["leads"] || []), "text-amber-500", "bg-amber-50 dark:bg-amber-500/10"}
+              ] do %>
+                <div class="flex items-center justify-between group/item p-4 rounded-3xl hover:bg-[#F9FAFB] dark:hover:bg-white/5 transition-colors border border-transparent hover:border-[#F1F3F5] dark:hover:border-white/5 cursor-default">
+                  <div class="flex items-center gap-4">
+                    <div class={["size-12 rounded-2xl flex items-center justify-center shadow-sm transition-transform group-hover/item:scale-110", bg_color, color]}>
+                      <.icon name={icon} class="size-6" />
+                    </div>
+                    <div>
+                      <p class="text-[0.6rem] font-extrabold text-[#A0AEC0] uppercase tracking-wider mb-0.5">{label}</p>
+                      <p class="text-xl font-black text-[#0B222C] dark:text-white leading-none">
+                        {count}
+                      </p>
+                    </div>
+                  </div>
+                  <div class="size-6 rounded-full bg-[#27C281]/10 flex items-center justify-center">
+                     <.icon name="hero-check" class="size-3 text-[#27C281]" />
+                  </div>
+                </div>
+              <% end %>
+            </div>
+
+            <div class="mt-8 pt-8 border-t border-[#F1F3F5] dark:border-white/5">
+              <p class="text-[0.65rem] font-bold text-[#A0AEC0] uppercase tracking-wider mb-6 text-center">
+                Analyzed {Calendar.strftime(@analyzed_at, "%b %d, %H:%M")}
+              </p>
+              <button class="w-full py-4 bg-[#0B222C] dark:bg-white dark:text-[#0B222C] text-white rounded-2xl font-extrabold shadow-xl shadow-[#0B222C]/20 hover:shadow-2xl hover:-translate-y-1 transition-all flex items-center justify-center gap-3 uppercase tracking-widest text-xs group/btn">
+                <.icon name="hero-arrow-down-tray" class="size-4 group-hover/btn:animate-bounce" />
+                Download Report
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="relative rounded-[2.5rem] bg-gradient-to-br from-[#27C281] to-[#20A06A] p-8 text-[#0B222C] overflow-hidden group shadow-glow">
+          <div class="absolute inset-0 bg-[url('/images/noise.png')] opacity-10 mix-blend-overlay"></div>
+          <div class="absolute -bottom-10 -right-10 p-10 opacity-20 group-hover:scale-110 transition-transform duration-700 ease-out">
+            <.icon name="hero-sparkles" class="size-48 rotate-12" />
           </div>
 
           <div class="relative z-10">
-            <div class="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-20">
-              <div>
-                <div class="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-[0.3em] mb-8 ring-1 ring-primary/20">
-                  <.icon name="hero-sparkles" class="size-4" /> Competitive Edge
-                </div>
-                <h3 class="text-5xl sm:text-6xl font-black tracking-tighter">
-                  Unique
-                  <span class="text-transparent bg-clip-text bg-linear-to-r from-white to-white/40">
-                    Differentiators
-                  </span>
-                </h3>
-              </div>
-              <p class="text-xl text-zinc-500 font-medium max-w-md leading-relaxed">
-                These are the core pillars that set your product apart in the current market landscape.
+             <div class="size-12 rounded-2xl bg-[#0B222C] flex items-center justify-center mb-6 shadow-lg shadow-[#0B222C]/20 text-[#27C281]">
+                <.icon name="hero-star" class="size-6" />
+             </div>
+            <h3 class="text-2xl font-black mb-4 tracking-tight leading-tight">Need deeper marketing depth?</h3>
+            <p class="text-[#0B222C]/80 text-sm font-bold leading-relaxed mb-8">
+              Unlock AI-generated content calendars and email sequences tailored to these results.
+            </p>
+            <button class="w-full px-6 py-4 bg-[#0B222C] text-white hover:bg-[#122C36] rounded-2xl font-extrabold transition-all text-xs uppercase tracking-widest shadow-lg shadow-[#0B222C]/20 flex items-center justify-center gap-2 group/btn">
+              Upgrade Analysis <.icon name="hero-arrow-right" class="size-3 group-hover/btn:translate-x-1 transition-transform" />
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    """
+  end
+
+  defp overview_tab(assigns) do
+    ~H"""
+    <div class="space-y-10">
+      <!-- Product Identity -->
+      <div class="glass-card rounded-[2.5rem] overflow-hidden hover:shadow-glow transition-all duration-300 group">
+        <div class="p-10 border-b border-[#F1F3F5] dark:border-white/5 flex items-center justify-between bg-[#F9FAFB]/50 dark:bg-white/5 backdrop-blur-sm">
+          <h3 class="text-[0.65rem] font-extrabold text-[#A0AEC0] uppercase tracking-[0.2em] group-hover:text-[#27C281] transition-colors">Product Identity</h3>
+          <div class="flex gap-4">
+            <span class="px-5 py-2 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-500 text-[0.65rem] font-black uppercase tracking-widest shadow-sm border border-indigo-100 dark:border-indigo-500/20">
+              {@analysis["pricing_model"]}
+            </span>
+            <span class="px-5 py-2 rounded-xl bg-[#27C281]/10 text-[#27C281] text-[0.65rem] font-black uppercase tracking-widest shadow-sm border border-[#27C281]/20">
+              {@analysis["tone"]}
+            </span>
+          </div>
+        </div>
+        <div class="p-10">
+          <div class="mb-12">
+            <h4 class="text-6xl font-black text-[#0B222C] dark:text-white tracking-tighter leading-none mb-6">
+               {@analysis["product_name"]}
+            </h4>
+            <p class="text-2xl text-[#27C281] font-bold italic opacity-90 leading-snug tracking-tight max-w-4xl">
+               "{@analysis["tagline"]}"
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-16">
+            <div>
+              <h5 class="text-[0.65rem] font-extrabold text-[#A0AEC0] uppercase tracking-[0.2em] mb-8 flex items-center gap-2">
+                <div class="size-1 rounded-full bg-[#A0AEC0]"></div> Target Audience
+              </h5>
+              <p class="text-[#4a5568] dark:text-[#A0AEC0] leading-loose font-bold text-lg">
+                {@analysis["target_audience"]}
               </p>
             </div>
+            <div>
+              <h5 class="text-[0.65rem] font-extrabold text-[#A0AEC0] uppercase tracking-[0.2em] mb-8 flex items-center gap-2">
+                <div class="size-1 rounded-full bg-[#A0AEC0]"></div> Market Verticals
+              </h5>
+              <div class="flex flex-wrap gap-4">
+                <%= for industry <- @analysis["industries"] || [] do %>
+                  <span class="px-6 py-3 rounded-2xl bg-[#F9FAFB] dark:bg-white/5 text-[#4a5568] dark:text-[#A0AEC0] text-sm font-extrabold border border-[#F1F3F5] dark:border-white/10 shadow-sm hover:scale-105 transition-transform cursor-default">
+                    {industry}
+                  </span>
+                <% end %>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <%= for {diff, index} <- Enum.with_index(@analysis["unique_differentiators"] || []) do %>
-                <div class="group/item relative">
-                  <div class="absolute -inset-0.5 bg-linear-to-r from-white/10 to-transparent rounded-[2.5rem] opacity-0 group-hover/item:opacity-100 transition duration-500">
+      <!-- Value Propositions & Features -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div class="glass-card rounded-[2.5rem] overflow-hidden hover:shadow-glow transition-all duration-300 group h-full">
+          <div class="p-8 border-b border-[#F1F3F5] dark:border-white/5 bg-[#F9FAFB]/50 dark:bg-white/5 backdrop-blur-sm">
+            <h3 class="text-[0.65rem] font-extrabold text-[#A0AEC0] uppercase tracking-[0.2em] group-hover:text-[#27C281] transition-colors">Value Propositions</h3>
+          </div>
+          <div class="p-10">
+            <div class="space-y-6">
+              <%= for vp <- @analysis["value_propositions"] || [] do %>
+                <div class="flex gap-6 p-6 rounded-[2rem] bg-[#F9FAFB] dark:bg-white/5 border border-[#F1F3F5] dark:border-white/10 group/item hover:translate-x-2 transition-transform duration-300 hover:border-[#27C281]/20 hover:bg-white dark:hover:bg-[#1A3845] hover:shadow-lg">
+                  <div class="size-12 rounded-2xl bg-[#27C281] flex items-center justify-center text-[#0B222C] shrink-0 shadow-lg shadow-[#27C281]/30 group-hover/item:scale-110 transition-transform">
+                    <.icon name="hero-check" class="size-6 font-bold" />
                   </div>
-                  <div class="relative px-10 py-12 rounded-[2.5rem] bg-white/5 border border-white/10 backdrop-blur-sm hover:bg-white/10 transition-all duration-500 flex gap-8 items-start">
-                    <div class="size-16 rounded-2xl bg-linear-to-br from-primary/20 to-secondary/20 flex items-center justify-center shrink-0 border border-white/10 group-hover/item:scale-110 group-hover/item:rotate-3 transition-all duration-500">
-                      <span class="text-2xl font-black text-white">{index + 1}</span>
-                    </div>
-                    <div class="space-y-2">
-                      <p class="text-2xl sm:text-3xl font-black tracking-tight text-white leading-tight">
-                        {diff}
-                      </p>
-                      <div class="h-1 w-12 bg-primary/50 rounded-full group-hover/item:w-24 transition-all duration-500">
-                      </div>
-                    </div>
-                  </div>
+                  <p class="text-base font-extrabold text-[#4a5568] dark:text-[#A0AEC0] leading-relaxed pt-1 group-hover/item:text-[#0B222C] dark:group-hover/item:text-white transition-colors">
+                    {vp}
+                  </p>
                 </div>
               <% end %>
             </div>
           </div>
         </div>
-      </div>
 
-    <!-- Strategic Intelligence -->
-      <div class="space-y-16">
-        <div class="flex flex-col md:flex-row md:items-end justify-between gap-8">
-          <div>
-            <div class="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-[0.3em] mb-8 ring-1 ring-primary/20">
-              <.icon name="hero-cpu-chip" class="size-4" /> AI Agents
-            </div>
-            <h3 class="text-5xl sm:text-6xl font-black tracking-tighter">
-              Strategic
-              <span class="text-transparent bg-clip-text bg-linear-to-r from-white to-white/40">
-                Intelligence
-              </span>
-            </h3>
+        <div class="glass-card rounded-[2.5rem] overflow-hidden hover:shadow-glow transition-all duration-300 group h-full">
+          <div class="p-8 border-b border-[#F1F3F5] dark:border-white/5 bg-[#F9FAFB]/50 dark:bg-white/5 backdrop-blur-sm">
+            <h3 class="text-[0.65rem] font-extrabold text-[#A0AEC0] uppercase tracking-[0.2em] group-hover:text-[#27C281] transition-colors">Key Features</h3>
           </div>
-          <p class="text-xl text-zinc-500 font-medium max-w-md leading-relaxed">
-            Deploy specialized AI agents to deep-dive into specific market opportunities.
-          </p>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          <!-- Persona Agent -->
-          <div class="group/agent relative">
-            <div class="absolute -inset-1 bg-linear-to-br from-indigo-500/20 to-transparent rounded-[3rem] blur-xl opacity-0 group-hover/agent:opacity-100 transition duration-700">
-            </div>
-            <div class="relative h-full rounded-[3rem] bg-zinc-900/50 border border-white/10 p-12 backdrop-blur-3xl hover:border-indigo-500/50 transition-all duration-500 flex flex-col">
-              <div class="flex items-center justify-between mb-10">
-                <div class="size-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-indigo-400 group-hover/agent:scale-110 group-hover/agent:rotate-3 transition-all duration-500 shadow-2xl">
-                  <.icon name="hero-user-circle" class="size-8" />
+          <div class="p-10">
+            <div class="space-y-8">
+              <%= for feature <- @analysis["key_features"] || [] do %>
+                <div class="space-y-3 group/feature p-4 rounded-[2rem] hover:bg-[#F9FAFB] dark:hover:bg-white/5 transition-colors -mx-4 px-4">
+                  <h4 class="text-xl font-black text-[#0B222C] dark:text-white flex items-center gap-4 tracking-tight group-hover/feature:translate-x-1 transition-transform">
+                    <div class="size-2.5 rounded-full bg-[#27C281] shadow-[0_0_10px_rgba(39,194,129,0.6)] group-hover/feature:scale-150 transition-transform"></div>
+                    {feature["name"]}
+                  </h4>
+                  <p class="text-sm font-bold text-[#718096] dark:text-[#A0AEC0] leading-relaxed pl-7">
+                    {feature["description"]}
+                  </p>
                 </div>
-                <%= if @personas != [] do %>
-                  <span class="px-4 py-1 rounded-full bg-emerald-500/10 text-emerald-500 text-[10px] font-black uppercase tracking-widest border border-emerald-500/20">
-                    Ready
-                  </span>
-                <% end %>
-              </div>
-              <h4 class="text-3xl font-black mb-4 leading-tight">Persona Builder</h4>
-              <p class="text-zinc-400 font-bold text-lg leading-relaxed mb-10">
-                Create detailed Ideal Customer Profiles (ICPs) with demographics and psychographics.
-              </p>
-
-              <div class="mt-auto">
-                <%= if @personas != [] do %>
-                  <div class="space-y-4 mb-8">
-                    <%= for persona <- Enum.take(@personas, 2) do %>
-                      <div class="flex items-center justify-between text-sm font-bold text-zinc-300">
-                        <span>{persona.name}</span>
-                        <span class="text-indigo-400">{persona.role}</span>
-                      </div>
-                    <% end %>
-                  </div>
-                <% end %>
-
-                <button
-                  phx-click="run_agent"
-                  phx-value-agent="personas"
-                  disabled={@loading_agents["personas"]}
-                  class={[
-                    "w-full py-5 rounded-2xl font-black text-lg transition-all flex items-center justify-center gap-3",
-                    if(@personas != [],
-                      do: "bg-white/5 text-white hover:bg-white/10",
-                      else: "bg-indigo-600 text-white shadow-2xl shadow-indigo-500/20 hover:scale-105"
-                    )
-                  ]}
-                >
-                  <%= if @loading_agents["personas"] do %>
-                    <.icon name="hero-arrow-path" class="size-6 animate-spin" /> Building...
-                  <% else %>
-                    <.icon
-                      name={if(@personas != [], do: "hero-eye", else: "hero-play")}
-                      class="size-6"
-                    />
-                    {if(@personas != [], do: "Rebuild Personas", else: "Run Agent")}
-                  <% end %>
-                </button>
-              </div>
+              <% end %>
             </div>
           </div>
-
-          <!-- Competitor Agent -->
-          <div class="group/agent relative">
-            <div class="absolute -inset-1 bg-linear-to-br from-primary/20 to-transparent rounded-[3rem] blur-xl opacity-0 group-hover/agent:opacity-100 transition duration-700">
-            </div>
-            <div class="relative h-full rounded-[3rem] bg-zinc-900/50 border border-white/10 p-12 backdrop-blur-3xl hover:border-primary/50 transition-all duration-500 flex flex-col">
-              <div class="flex items-center justify-between mb-10">
-                <div class="size-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-primary group-hover/agent:scale-110 group-hover/agent:rotate-3 transition-all duration-500 shadow-2xl">
-                  <.icon name="hero-magnifying-glass-circle" class="size-8" />
-                </div>
-                <%= if @analysis["competitors"] do %>
-                  <span class="px-4 py-1 rounded-full bg-emerald-500/10 text-emerald-500 text-[10px] font-black uppercase tracking-widest border border-emerald-500/20">
-                    Ready
-                  </span>
-                <% end %>
-              </div>
-              <h4 class="text-3xl font-black mb-4 leading-tight">Competitor Gap Analysis</h4>
-              <p class="text-zinc-400 font-bold text-lg leading-relaxed mb-10">
-                Identify direct competitors and find the "Market Gap" where you can win.
-              </p>
-
-              <div class="mt-auto">
-                <%= if @analysis["competitors"] do %>
-                  <div class="space-y-4 mb-8">
-                    <%= for comp <- Enum.take(@analysis["competitors"], 2) do %>
-                      <div class="flex items-center justify-between text-sm font-bold text-zinc-300">
-                        <span>{comp["name"]}</span>
-                        <span class="text-primary">{comp["pricing_strategy"]}</span>
-                      </div>
-                    <% end %>
-                  </div>
-                <% end %>
-
-                <button
-                  phx-click="run_agent"
-                  phx-value-agent="competitors"
-                  disabled={@loading_agents["competitors"]}
-                  class={[
-                    "w-full py-5 rounded-2xl font-black text-lg transition-all flex items-center justify-center gap-3",
-                    if(@analysis["competitors"],
-                      do: "bg-white/5 text-white hover:bg-white/10",
-                      else: "bg-primary text-white shadow-2xl shadow-primary/20 hover:scale-105"
-                    )
-                  ]}
-                >
-                  <%= if @loading_agents["competitors"] do %>
-                    <.icon name="hero-arrow-path" class="size-6 animate-spin" /> Analyzing...
-                  <% else %>
-                    <.icon
-                      name={if(@analysis["competitors"], do: "hero-eye", else: "hero-play")}
-                      class="size-6"
-                    />
-                    {if(@analysis["competitors"], do: "Refresh Analysis", else: "Run Agent")}
-                  <% end %>
-                </button>
-              </div>
-            </div>
-          </div>
-
-    <!-- Lead Agent -->
-          <div class="group/agent relative">
-            <div class="absolute -inset-1 bg-linear-to-br from-secondary/20 to-transparent rounded-[3rem] blur-xl opacity-0 group-hover/agent:opacity-100 transition duration-700">
-            </div>
-            <div class="relative h-full rounded-[3rem] bg-zinc-900/50 border border-white/10 p-12 backdrop-blur-3xl hover:border-secondary/50 transition-all duration-500 flex flex-col">
-              <div class="flex items-center justify-between mb-10">
-                <div class="size-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-secondary group-hover/agent:scale-110 group-hover/agent:rotate-3 transition-all duration-500 shadow-2xl">
-                  <.icon name="hero-user-group" class="size-8" />
-                </div>
-                <%= if @analysis["leads"] do %>
-                  <span class="px-4 py-1 rounded-full bg-emerald-500/10 text-emerald-500 text-[10px] font-black uppercase tracking-widest border border-emerald-500/20">
-                    Ready
-                  </span>
-                <% end %>
-              </div>
-              <h4 class="text-3xl font-black mb-4 leading-tight">Lead Discovery Agent</h4>
-              <p class="text-zinc-400 font-bold text-lg leading-relaxed mb-10">
-                Find high-intent customer segments and personalized outreach hooks.
-              </p>
-
-              <div class="mt-auto">
-                <%= if @analysis["leads"] do %>
-                  <div class="space-y-4 mb-8">
-                    <%= for segment <- Enum.take(@analysis["leads"], 2) do %>
-                      <div class="flex items-center justify-between text-sm font-bold text-zinc-300">
-                        <span>{segment["name"]}</span>
-                        <span class="text-secondary">Hook Ready</span>
-                      </div>
-                    <% end %>
-                  </div>
-                <% end %>
-
-                <button
-                  phx-click="run_agent"
-                  phx-value-agent="leads"
-                  disabled={@loading_agents["leads"]}
-                  class={[
-                    "w-full py-5 rounded-2xl font-black text-lg transition-all flex items-center justify-center gap-3",
-                    if(@analysis["leads"],
-                      do: "bg-white/5 text-white hover:bg-white/10",
-                      else: "bg-secondary text-white shadow-2xl shadow-secondary/20 hover:scale-105"
-                    )
-                  ]}
-                >
-                  <%= if @loading_agents["leads"] do %>
-                    <.icon name="hero-arrow-path" class="size-6 animate-spin" /> Discovering...
-                  <% else %>
-                    <.icon
-                      name={if(@analysis["leads"], do: "hero-eye", else: "hero-play")}
-                      class="size-6"
-                    />
-                    {if(@analysis["leads"], do: "Refresh Leads", else: "Run Agent")}
-                  <% end %>
-                </button>
-              </div>
-            </div>
-          </div>
-
-    <!-- Content Agent -->
-          <div class="group/agent relative">
-            <div class="absolute -inset-1 bg-linear-to-br from-white/10 to-transparent rounded-[3rem] blur-xl opacity-0 group-hover/agent:opacity-100 transition duration-700">
-            </div>
-            <div class="relative h-full rounded-[3rem] bg-zinc-900/50 border border-white/10 p-12 backdrop-blur-3xl hover:border-white/50 transition-all duration-500 flex flex-col">
-              <div class="flex items-center justify-between mb-10">
-                <div class="size-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-white group-hover/agent:scale-110 group-hover/agent:rotate-3 transition-all duration-500 shadow-2xl">
-                  <.icon name="hero-megaphone" class="size-8" />
-                </div>
-                <%= if @analysis["content"] do %>
-                  <span class="px-4 py-1 rounded-full bg-emerald-500/10 text-emerald-500 text-[10px] font-black uppercase tracking-widest border border-emerald-500/20">
-                    Ready
-                  </span>
-                <% end %>
-              </div>
-              <h4 class="text-3xl font-black mb-4 leading-tight">Content Atomizer</h4>
-              <p class="text-zinc-400 font-bold text-lg leading-relaxed mb-10">
-                Generate multi-channel content atoms from your product's core value.
-              </p>
-
-              <div class="mt-auto">
-                <%= if @analysis["content"] do %>
-                  <div class="space-y-4 mb-8">
-                    <div class="text-sm font-bold text-zinc-300">
-                      Strategy:
-                      <span class="text-white font-medium">
-                        {String.slice(@analysis["content"]["strategy"] || "", 0, 40)}...
-                      </span>
-                    </div>
-                  </div>
-                <% end %>
-
-                <button
-                  phx-click="run_agent"
-                  phx-value-agent="content"
-                  disabled={@loading_agents["content"]}
-                  class={[
-                    "w-full py-5 rounded-2xl font-black text-lg transition-all flex items-center justify-center gap-3",
-                    if(@analysis["content"],
-                      do: "bg-white/5 text-white hover:bg-white/10",
-                      else: "bg-white text-zinc-950 shadow-2xl shadow-white/10 hover:scale-105"
-                    )
-                  ]}
-                >
-                  <%= if @loading_agents["content"] do %>
-                    <.icon name="hero-arrow-path" class="size-6 animate-spin" /> Generating...
-                  <% else %>
-                    <.icon
-                      name={if(@analysis["content"], do: "hero-eye", else: "hero-play")}
-                      class="size-6"
-                    />
-                    {if(@analysis["content"], do: "Refresh Content", else: "Run Agent")}
-                  <% end %>
-                </button>
-              </div>
-            </div>
-          </div>
-
-    <!-- CRO Agent -->
-          <div class="group/agent relative">
-            <div class="absolute -inset-1 bg-linear-to-br from-emerald-500/20 to-transparent rounded-[3rem] blur-xl opacity-0 group-hover/agent:opacity-100 transition duration-700">
-            </div>
-            <div class="relative h-full rounded-[3rem] bg-zinc-900/50 border border-white/10 p-12 backdrop-blur-3xl hover:border-emerald-500/50 transition-all duration-500 flex flex-col">
-              <div class="flex items-center justify-between mb-10">
-                <div class="size-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-emerald-500 group-hover/agent:scale-110 group-hover/agent:rotate-3 transition-all duration-500 shadow-2xl">
-                  <.icon name="hero-presentation-chart-line" class="size-8" />
-                </div>
-                <%= if @analysis["cro_audit"] do %>
-                  <span class="px-4 py-1 rounded-full bg-emerald-500/10 text-emerald-500 text-[10px] font-black uppercase tracking-widest border border-emerald-500/20">
-                    Ready
-                  </span>
-                <% end %>
-              </div>
-              <h4 class="text-3xl font-black mb-4 leading-tight">Landing Page Auditor</h4>
-              <p class="text-zinc-400 font-bold text-lg leading-relaxed mb-10">
-                Get a professional CRO audit with specific fixes to increase conversions.
-              </p>
-
-              <div class="mt-auto">
-                <%= if @analysis["cro_audit"] do %>
-                  <div class="flex items-center gap-4 mb-8">
-                    <div class="text-4xl font-black text-emerald-500">
-                      {@analysis["cro_audit"]["overall_score"]}%
-                    </div>
-                    <div class="text-xs font-black text-zinc-500 uppercase tracking-widest">
-                      Overall Score
-                    </div>
-                  </div>
-                <% end %>
-
-                <button
-                  phx-click="run_agent"
-                  phx-value-agent="cro"
-                  disabled={@loading_agents["cro"]}
-                  class={[
-                    "w-full py-5 rounded-2xl font-black text-lg transition-all flex items-center justify-center gap-3",
-                    if(@analysis["cro_audit"],
-                      do: "bg-white/5 text-white hover:bg-white/10",
-                      else:
-                        "bg-emerald-500 text-white shadow-2xl shadow-emerald-500/20 hover:scale-105"
-                    )
-                  ]}
-                >
-                  <%= if @loading_agents["cro"] do %>
-                    <.icon name="hero-arrow-path" class="size-6 animate-spin" /> Auditing...
-                  <% else %>
-                    <.icon
-                      name={if(@analysis["cro_audit"], do: "hero-eye", else: "hero-play")}
-                      class="size-6"
-                    />
-                    {if(@analysis["cro_audit"], do: "Refresh Audit", else: "Run Agent")}
-                  <% end %>
-                </button>
-              </div>
-            </div>
-          </div>
-
-    <!-- AEO Agent -->
-          <div class="group/agent relative">
-            <div class="absolute -inset-1 bg-linear-to-br from-amber-500/20 to-transparent rounded-[3rem] blur-xl opacity-0 group-hover/agent:opacity-100 transition duration-700">
-            </div>
-            <div class="relative h-full rounded-[3rem] bg-zinc-900/50 border border-white/10 p-12 backdrop-blur-3xl hover:border-amber-500/50 transition-all duration-500 flex flex-col">
-              <div class="flex items-center justify-between mb-10">
-                <div class="size-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-amber-500 group-hover/agent:scale-110 group-hover/agent:rotate-3 transition-all duration-500 shadow-2xl">
-                  <.icon name="hero-cpu-chip" class="size-8" />
-                </div>
-                <%= if @analysis["aeo_strategy"] do %>
-                  <span class="px-4 py-1 rounded-full bg-emerald-500/10 text-emerald-500 text-[10px] font-black uppercase tracking-widest border border-emerald-500/20">
-                    Ready
-                  </span>
-                <% end %>
-              </div>
-              <h4 class="text-3xl font-black mb-4 leading-tight">AEO Strategy Agent</h4>
-              <p class="text-zinc-400 font-bold text-lg leading-relaxed mb-10">
-                Optimize for AI search engines like Perplexity and SearchGPT.
-              </p>
-
-              <div class="mt-auto">
-                <%= if @analysis["aeo_strategy"] do %>
-                  <div class="space-y-4 mb-8">
-                    <div class="text-sm font-bold text-zinc-300">
-                      Clusters:
-                      <span class="text-amber-500">
-                        {length(@analysis["aeo_strategy"]["semantic_clusters"] || [])} Identified
-                      </span>
-                    </div>
-                  </div>
-                <% end %>
-
-                <button
-                  phx-click="run_agent"
-                  phx-value-agent="aeo"
-                  disabled={@loading_agents["aeo"]}
-                  class={[
-                    "w-full py-5 rounded-2xl font-black text-lg transition-all flex items-center justify-center gap-3",
-                    if(@analysis["aeo_strategy"],
-                      do: "bg-white/5 text-white hover:bg-white/10",
-                      else: "bg-amber-500 text-white shadow-2xl shadow-amber-500/20 hover:scale-105"
-                    )
-                  ]}
-                >
-                  <%= if @loading_agents["aeo"] do %>
-                    <.icon name="hero-arrow-path" class="size-6 animate-spin" /> Optimizing...
-                  <% else %>
-                    <.icon
-                      name={if(@analysis["aeo_strategy"], do: "hero-eye", else: "hero-play")}
-                      class="size-6"
-                    />
-                    {if(@analysis["aeo_strategy"], do: "Refresh AEO", else: "Run Agent")}
-                  <% end %>
-                </button>
-              </div>
-            </div>
-          </div>
-
-    <!-- Content Writer Agent -->
-          <div class="group/agent relative">
-            <div class="absolute -inset-1 bg-linear-to-br from-blue-500/20 to-transparent rounded-[3rem] blur-xl opacity-0 group-hover/agent:opacity-100 transition duration-700">
-            </div>
-            <div class="relative h-full rounded-[3rem] bg-zinc-900/50 border border-white/10 p-12 backdrop-blur-3xl hover:border-blue-500/50 transition-all duration-500 flex flex-col">
-              <div class="flex items-center justify-between mb-10">
-                <div class="size-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-blue-500 group-hover/agent:scale-110 group-hover/agent:rotate-3 transition-all duration-500 shadow-2xl">
-                  <.icon name="hero-pencil-square" class="size-8" />
-                </div>
-                <%= if @contents != [] do %>
-                  <span class="px-4 py-1 rounded-full bg-emerald-500/10 text-emerald-500 text-[10px] font-black uppercase tracking-widest border border-emerald-500/20">
-                    {length(@contents)} Posts
-                  </span>
-                <% end %>
-              </div>
-              <h4 class="text-3xl font-black mb-4 leading-tight">Content Writer</h4>
-              <p class="text-zinc-400 font-bold text-lg leading-relaxed mb-10">
-                Generate SEO-optimized blog posts tailored to your target personas.
-              </p>
-
-              <div class="mt-auto">
-                <%= if @contents != [] do %>
-                  <div class="space-y-3 mb-8">
-                    <div :for={content <- Enum.take(@contents, 2)} class="p-4 rounded-xl bg-white/5 border border-white/10">
-                      <div class="text-sm font-black text-white truncate">{content.title}</div>
-                      <div class="text-xs text-zinc-500 mt-1">{content.target_keyword}</div>
-                    </div>
-                    <%= if length(@contents) > 2 do %>
-                      <div class="text-xs text-zinc-500 font-bold text-center">
-                        +{length(@contents) - 2} more posts
-                      </div>
-                    <% end %>
-                  </div>
-                <% end %>
-
-                <button
-                  phx-click="run_agent"
-                  phx-value-agent="content_writer"
-                  disabled={@loading_agents["content_writer"]}
-                  class={[
-                    "w-full py-5 rounded-2xl font-black text-lg transition-all flex items-center justify-center gap-3",
-                    if(@contents != [],
-                      do: "bg-white/5 text-white hover:bg-white/10",
-                      else: "bg-blue-500 text-white shadow-2xl shadow-blue-500/20 hover:scale-105"
-                    )
-                  ]}
-                >
-                  <%= if @loading_agents["content_writer"] do %>
-                    <.icon name="hero-arrow-path" class="size-6 animate-spin" /> Writing...
-                  <% else %>
-                    <.icon
-                      name={if(@contents != [], do: "hero-eye", else: "hero-play")}
-                      class="size-6"
-                    />
-                    {if(@contents != [], do: "Generate More", else: "Run Agent")}
-                  <% end %>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <.persona_results personas={@personas} project={@project} />
-      <.competitor_results competitors={@analysis["competitors"]} />
-      <.lead_results leads={@analysis["leads"]} />
-      <.content_results content={@analysis["content"]} />
-      <.cro_results audit={@analysis["cro_audit"]} />
-      <.aeo_results strategy={@analysis["aeo_strategy"]} />
-
-    <!-- Analysis Footer -->
-      <div class="flex flex-col sm:flex-row items-center justify-between gap-8 p-12 rounded-[3rem] bg-white/5 border border-white/10 backdrop-blur-xl shadow-2xl">
-        <div class="flex items-center gap-6">
-          <div class="size-16 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 border border-emerald-500/20">
-            <.icon name="hero-check-badge" class="size-8" />
-          </div>
-          <div>
-            <p class="text-xs font-black uppercase tracking-[0.3em] text-zinc-500 mb-1">
-              Analysis Complete
-            </p>
-            <p class="text-xl font-black">
-              Generated on {Calendar.strftime(@analyzed_at, "%b %d, %Y at %I:%M %p")}
-            </p>
-          </div>
-        </div>
-        <div class="flex items-center gap-4">
-          <button class="px-10 py-5 rounded-2xl bg-white/5 border border-white/10 text-white font-black text-lg hover:bg-white/10 transition-colors">
-            Export PDF
-          </button>
-          <button class="px-10 py-5 rounded-2xl bg-primary text-white font-black text-lg shadow-2xl shadow-primary/20 hover:scale-105 transition-all">
-            Share Report
-          </button>
         </div>
       </div>
     </div>
@@ -924,24 +474,47 @@ defmodule MarketMindWeb.ProjectLive.Show do
   end
 
   defp failed_state(assigns) do
+    # Extract error message from analysis_data if available
+    error_message = get_error_message(assigns.project)
+
+    assigns = assign(assigns, :error_message, error_message)
+
     ~H"""
-    <div class="rounded-[3rem] bg-rose-500/5 border border-rose-500/20 backdrop-blur-xl p-24 text-center shadow-2xl">
-      <div class="mx-auto size-24 rounded-3xl bg-rose-500/10 flex items-center justify-center text-rose-500 mb-8">
-        <.icon name="hero-exclamation-triangle" class="size-12" />
+    <div class="bg-white dark:bg-[#2f3349] rounded-xl shadow-sm border border-[#dbdade] dark:border-[#43496e] p-12 text-center">
+      <div class="mx-auto size-20 rounded-xl bg-danger/10 flex items-center justify-center text-danger mb-6">
+        <.icon name="hero-exclamation-triangle" class="size-10" />
       </div>
-      <h2 class="text-4xl font-black mb-4">Analysis Failed</h2>
-      <p class="text-xl text-zinc-400 max-w-md mx-auto leading-relaxed mb-12">
-        We encountered an error while analyzing your website. This could be due to a timeout or the site blocking our crawler.
+      <h2 class="text-2xl font-bold text-[#5d596c] dark:text-[#cfd3ec] mb-4">Analysis Failed</h2>
+      <p class="text-base text-[#a8aaae] max-w-md mx-auto leading-relaxed mb-8">
+        {@error_message}
       </p>
+      <%= if rate_limited?(@project) do %>
+        <p class="text-sm text-warning font-bold mb-8">
+          <.icon name="hero-clock" class="size-4 inline mr-1" />
+          The AI service is temporarily rate limited. Please wait a few minutes before retrying.
+        </p>
+      <% end %>
       <button
         phx-click="reanalyze"
-        class="inline-flex items-center gap-3 px-10 py-5 rounded-2xl bg-rose-600 text-white font-black text-xl hover:scale-105 active:scale-95 transition-all shadow-2xl shadow-rose-600/20"
+        class="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-danger text-white font-bold hover:bg-danger/90 transition-all shadow-sm shadow-danger/20"
       >
-        <.icon name="hero-arrow-path" class="size-6" /> Try Again
+        <.icon name="hero-arrow-path" class="size-5" /> Try Again
       </button>
     </div>
     """
   end
+
+  defp get_error_message(%{analysis_data: %{"error_message" => msg}}) when is_binary(msg), do: msg
+
+  defp get_error_message(_project) do
+    "We encountered an error while analyzing your website. This could be due to a timeout or the site blocking our crawler."
+  end
+
+  defp rate_limited?(%{analysis_data: %{"error_message" => msg}}) when is_binary(msg) do
+    String.contains?(String.downcase(msg), "rate limit")
+  end
+
+  defp rate_limited?(_), do: false
 
   defp unknown_state(assigns) do
     ~H"""
@@ -953,133 +526,101 @@ defmodule MarketMindWeb.ProjectLive.Show do
 
   defp persona_results(assigns) do
     ~H"""
-    <div :if={@personas != []} class="space-y-12 pt-24 border-t border-white/5">
-      <div class="flex items-center justify-between gap-4">
+    <div class="space-y-10">
+      <div class="flex items-center justify-between">
+        <h3 class="text-4xl font-black text-[#0B222C] dark:text-white tracking-tighter">Target Personas</h3>
         <div class="flex items-center gap-4">
-          <div class="size-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-400 border border-indigo-500/20">
-            <.icon name="hero-user-group" class="size-6" />
-          </div>
-          <h3 class="text-4xl font-black tracking-tighter">Ideal Customer Profiles</h3>
+          <%= if assigns[:loading] do %>
+            <div class="flex items-center gap-2 text-[#27C281] text-xs font-black uppercase tracking-widest animate-pulse">
+              <div class="size-3 border-2 border-[#27C281]/20 border-t-[#27C281] rounded-full animate-spin"></div>
+              Generating...
+            </div>
+          <% end %>
+          <.link
+            navigate={~p"/projects/#{@project.slug}/personas/compare"}
+            class="hidden md:inline-flex items-center px-6 py-3 rounded-2xl bg-[#27C281]/10 text-[#27C281] text-[0.65rem] font-black uppercase tracking-widest hover:bg-[#27C281] hover:text-[#0B222C] transition-all shadow-sm hover:shadow-lg hover:-translate-y-0.5"
+          >
+            <.icon name="hero-arrows-right-left" class="size-4 mr-2" /> Compare All
+          </.link>
         </div>
-        <.link
-          navigate={~p"/projects/#{@project.slug}/personas/compare"}
-          class="inline-flex items-center gap-3 px-6 py-3 rounded-xl bg-white/5 border border-white/10 text-white font-black text-sm hover:bg-white/10 transition-all"
-        >
-          <.icon name="hero-arrows-right-left" class="size-5" /> Compare Personas
-        </.link>
       </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <%= for persona <- @personas do %>
-          <div class="group/persona relative">
-            <div class="absolute -inset-1 bg-linear-to-br from-indigo-500/20 to-transparent rounded-[3rem] blur-xl opacity-0 group-hover/persona:opacity-100 transition duration-700">
+      <div class={[
+        "grid grid-cols-1 md:grid-cols-2 gap-8 transition-opacity duration-300",
+        assigns[:loading] && "opacity-50 pointer-events-none"
+      ]}>
+        <%= if @personas == [] && !assigns[:loading] do %>
+          <div class="md:col-span-2 glass-card rounded-[2.5rem] p-24 text-center group">
+            <div class="mx-auto size-24 rounded-[2rem] bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center text-[#27C281] mb-8 shadow-inner group-hover:scale-110 transition-transform duration-500">
+              <.icon name="hero-user-group" class="size-12" />
             </div>
-            <div class="relative h-full rounded-[3rem] bg-zinc-900/50 border border-white/10 p-10 backdrop-blur-3xl hover:border-indigo-500/50 transition-all duration-500 flex flex-col">
-              <div class="flex items-start justify-between mb-8">
-                <div class="space-y-1">
-                  <div class="flex items-center gap-3">
-                    <h4 class="text-3xl font-black text-white leading-tight">{persona.name}</h4>
-                    <%= if persona.is_primary do %>
-                      <span class="px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-500 text-[10px] font-black uppercase tracking-widest border border-amber-500/20">
-                        Primary
-                      </span>
-                    <% end %>
-                  </div>
-                  <p class="text-indigo-400 font-black text-sm uppercase tracking-widest">
-                    {persona.role}
-                  </p>
+            <h4 class="text-3xl font-black text-[#0B222C] dark:text-white mb-4 tracking-tight">No Personas Yet</h4>
+            <p class="text-[#A0AEC0] mb-12 max-w-sm mx-auto font-bold leading-relaxed">Run the Persona Builder agent to generate your ideal customer profiles.</p>
+            <button
+              phx-click="run_agent"
+              phx-value-agent="personas"
+              class="inline-flex items-center gap-3 px-10 py-5 rounded-2xl bg-[#27C281] text-[#0B222C] font-black hover:bg-[#20A06A] hover:text-white transition-all shadow-xl shadow-[#27C281]/20 hover:shadow-2xl hover:-translate-y-1 uppercase tracking-widest text-xs"
+            >
+              <.icon name="hero-play" class="size-5" /> Run Agent
+            </button>
+          </div>
+        <% end %>
+        <%= for persona <- @personas do %>
+          <div class="glass-card rounded-[2.5rem] overflow-hidden flex flex-col group hover:shadow-glow hover:-translate-y-1 transition-all duration-300 border border-transparent hover:border-[#27C281]/20">
+            <div class="p-10 border-b border-[#F1F3F5] dark:border-white/5 flex items-center justify-between bg-[#F9FAFB]/50 dark:bg-white/5 backdrop-blur-sm">
+              <div class="flex items-center gap-6">
+                <div class="size-16 rounded-2xl bg-gradient-to-br from-emerald-50 to-white dark:from-emerald-900/20 dark:to-transparent flex items-center justify-center text-[#27C281] group-hover:scale-110 transition-transform shadow-sm border border-emerald-100 dark:border-emerald-500/10">
+                  <.icon name="hero-user" class="size-8" />
                 </div>
-                <button
-                  phx-click="set_primary_persona"
-                  phx-value-id={persona.id}
-                  class={[
-                    "size-12 rounded-xl border transition-all flex items-center justify-center",
-                    if(persona.is_primary,
-                      do: "bg-amber-500/10 border-amber-500/50 text-amber-500",
-                      else: "bg-white/5 border-white/10 text-zinc-500 hover:border-amber-500/50 hover:text-amber-500"
-                    )
-                  ]}
-                >
-                  <.icon
-                    name={if(persona.is_primary, do: "hero-star-solid", else: "hero-star")}
-                    class="size-6"
-                  />
-                </button>
-              </div>
-
-              <div class="space-y-8">
-                <!-- Demographics -->
-                <div class="grid grid-cols-2 gap-4">
-                  <div class="p-4 rounded-2xl bg-white/5 border border-white/10">
-                    <div class="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">
-                      Age Range
-                    </div>
-                    <div class="text-white font-bold">{persona.demographics["age_range"]}</div>
-                  </div>
-                  <div class="p-4 rounded-2xl bg-white/5 border border-white/10">
-                    <div class="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">
-                      Job Title
-                    </div>
-                    <div class="text-white font-bold">{persona.demographics["job_title"]}</div>
-                  </div>
-                </div>
-
-                <!-- Personality -->
-                <div class="space-y-4">
-                  <h5 class="text-xs font-black text-zinc-500 uppercase tracking-[0.3em]">
-                    Personality Traits
-                  </h5>
-                  <div class="flex flex-wrap gap-2">
-                    <%= for {trait, value} <- persona.personality_traits || %{} do %>
-                      <span class="px-3 py-1 rounded-lg bg-indigo-500/5 text-indigo-400 text-[10px] font-black uppercase tracking-widest border border-indigo-500/10">
-                        {String.capitalize(trait)}: {value}
-                      </span>
-                    <% end %>
-                  </div>
-                </div>
-
-                <!-- Pain Points -->
-                <div class="space-y-4">
-                  <h5 class="text-xs font-black text-zinc-500 uppercase tracking-[0.3em]">
-                    Core Pain Points
-                  </h5>
-                  <ul class="space-y-3">
-                    <%= for pain <- persona.pain_points || [] do %>
-                      <li class="flex gap-3 text-sm font-bold text-zinc-400 leading-relaxed">
-                        <.icon name="hero-no-symbol" class="size-5 text-rose-500 shrink-0" />
-                        {pain}
-                      </li>
-                    <% end %>
-                  </ul>
-                </div>
-
-                <!-- Goals -->
-                <div class="space-y-4">
-                  <h5 class="text-xs font-black text-zinc-500 uppercase tracking-[0.3em]">
-                    Primary Goals
-                  </h5>
-                  <ul class="space-y-3">
-                    <%= for goal <- persona.goals || [] do %>
-                      <li class="flex gap-3 text-sm font-bold text-zinc-400 leading-relaxed">
-                        <.icon name="hero-check-circle" class="size-5 text-emerald-500 shrink-0" />
-                        {goal}
-                      </li>
-                    <% end %>
-                  </ul>
+                <div>
+                  <h4 class="text-2xl font-black text-[#0B222C] dark:text-white tracking-tight leading-none mb-1 group-hover:text-[#27C281] transition-colors">{persona.name}</h4>
+                  <p class="text-[0.65rem] text-[#A0AEC0] font-black uppercase tracking-widest">{persona.role} • {persona.age_range}</p>
                 </div>
               </div>
+              <%= if persona.is_primary do %>
+                <span class="px-4 py-2 rounded-full bg-[#27C281]/10 text-[#27C281] text-[0.6rem] font-black uppercase tracking-widest shadow-sm border border-[#27C281]/10">
+                  Primary
+                </span>
+              <% end %>
+            </div>
 
-              <div class="mt-auto pt-10 flex items-center justify-between gap-4">
-                <div class="p-6 rounded-2xl bg-indigo-500/5 border border-indigo-500/10 italic text-sm font-medium text-indigo-300 leading-relaxed flex-1">
-                  "{persona.description}"
-                </div>
-                <.link
-                  navigate={~p"/projects/#{@project.slug}/personas/#{persona.id}"}
-                  class="size-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-zinc-500 hover:text-indigo-400 hover:border-indigo-500/50 transition-all shrink-0"
-                >
-                  <.icon name="hero-arrow-right" class="size-6" />
-                </.link>
+            <div class="p-10 flex-1 space-y-10">
+              <div>
+                <h5 class="text-[0.65rem] font-extrabold text-[#A0AEC0] uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
+                   <div class="size-1 rounded-full bg-red-400"></div> Pain Points
+                </h5>
+                <ul class="grid grid-cols-1 gap-3">
+                  <%= for pain <- Enum.take(persona.pain_points || [], 3) do %>
+                    <li class="flex items-start gap-4 text-sm text-[#4a5568] dark:text-[#A0AEC0] font-bold p-4 rounded-2xl bg-[#F9FAFB] dark:bg-white/5 border border-[#F1F3F5] dark:border-white/10 group/item hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors">
+                      <.icon name="hero-minus-circle" class="size-5 text-red-400 shrink-0 mt-0.5 group-hover/item:scale-110 transition-transform" />
+                      <span class="leading-relaxed">{pain}</span>
+                    </li>
+                  <% end %>
+                </ul>
               </div>
+
+              <div>
+                <h5 class="text-[0.65rem] font-extrabold text-[#A0AEC0] uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
+                   <div class="size-1 rounded-full bg-[#27C281]"></div> Goals
+                </h5>
+                <ul class="grid grid-cols-1 gap-3">
+                  <%= for goal <- Enum.take(persona.goals || [], 3) do %>
+                    <li class="flex items-start gap-4 text-sm text-[#4a5568] dark:text-[#A0AEC0] font-bold p-4 rounded-2xl bg-[#F9FAFB] dark:bg-white/5 border border-[#F1F3F5] dark:border-white/10 group/item hover:bg-emerald-50 dark:hover:bg-emerald-900/10 transition-colors">
+                      <.icon name="hero-check-circle" class="size-5 text-[#27C281] shrink-0 mt-0.5 group-hover/item:scale-110 transition-transform" />
+                      <span class="leading-relaxed">{goal}</span>
+                    </li>
+                  <% end %>
+                </ul>
+              </div>
+            </div>
+
+            <div class="p-8 bg-[#F9FAFB]/50 dark:bg-white/5 border-t border-[#F1F3F5] dark:border-white/5 backdrop-blur-sm">
+              <.link
+                navigate={~p"/projects/#{@project.slug}/personas/#{persona.id}"}
+                class="w-full flex items-center justify-center py-4 text-[0.7rem] font-black text-[#0B222C] dark:text-white hover:text-[#27C281] transition-colors bg-white dark:bg-[#0B222C] rounded-2xl border border-[#F1F3F5] dark:border-white/10 shadow-sm hover:shadow-md uppercase tracking-widest group/btn"
+              >
+                View Full Profile <.icon name="hero-arrow-right" class="size-3.5 ml-2 group-hover/btn:translate-x-1 transition-transform" />
+              </.link>
             </div>
           </div>
         <% end %>
@@ -1090,44 +631,78 @@ defmodule MarketMindWeb.ProjectLive.Show do
 
   defp competitor_results(assigns) do
     ~H"""
-    <div :if={@competitors} class="space-y-12 pt-24 border-t border-white/5">
-      <div class="flex items-center gap-4">
-        <div class="size-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
-          <.icon name="hero-magnifying-glass" class="size-6" />
-        </div>
-        <h3 class="text-4xl font-black tracking-tighter">Competitor Gap Analysis</h3>
+    <div class="space-y-10">
+      <div class="flex items-center justify-between">
+        <h3 class="text-4xl font-black text-[#0B222C] dark:text-white tracking-tighter">Market Competitors</h3>
+        <%= if assigns[:loading] do %>
+          <div class="flex items-center gap-2 text-[#27C281] text-xs font-black uppercase tracking-widest animate-pulse">
+            <div class="size-3 border-2 border-[#27C281]/20 border-t-[#27C281] rounded-full animate-spin"></div>
+            Analyzing...
+          </div>
+        <% end %>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <%= for comp <- @competitors do %>
-          <div class="group/comp relative rounded-[3rem] bg-white/5 border border-white/10 p-12 hover:border-primary/50 transition-all duration-500">
-            <div class="flex justify-between items-start mb-8">
-              <h4 class="text-3xl font-black">{comp["name"]}</h4>
-              <span class="px-4 py-2 rounded-xl bg-primary/10 text-primary text-xs font-black uppercase tracking-widest border border-primary/20">
-                {comp["pricing_strategy"]}
-              </span>
+      <div class={[
+        "grid grid-cols-1 md:grid-cols-2 gap-8 transition-opacity duration-300",
+        assigns[:loading] && "opacity-50 pointer-events-none"
+      ]}>
+        <%= if (@competitors == [] || is_nil(@competitors)) && !assigns[:loading] do %>
+          <div class="md:col-span-2 glass-card rounded-[2.5rem] p-24 text-center group">
+            <div class="mx-auto size-24 rounded-[2rem] bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center text-blue-500 mb-8 shadow-inner group-hover:scale-110 transition-transform duration-500">
+              <.icon name="hero-globe-alt" class="size-12" />
             </div>
-            <p class="text-zinc-400 font-bold mb-8 leading-relaxed">{comp["description"]}</p>
+            <h4 class="text-3xl font-black text-[#0B222C] dark:text-white mb-4 tracking-tight">No Competitors Yet</h4>
+            <p class="text-[#A0AEC0] mb-12 max-w-sm mx-auto font-bold leading-relaxed">Run the Competitor Agent to identify your market rivals.</p>
+            <button
+              phx-click="run_agent"
+              phx-value-agent="competitors"
+              class="inline-flex items-center gap-3 px-10 py-5 rounded-2xl bg-[#0B222C] text-white font-black hover:bg-[#122C36] transition-all shadow-xl shadow-[#0B222C]/20 hover:shadow-2xl hover:-translate-y-1 uppercase tracking-widest text-xs"
+            >
+              <.icon name="hero-play" class="size-5" /> Run Agent
+            </button>
+          </div>
+        <% end %>
+        <%= for comp <- @competitors || [] do %>
+          <div class="glass-card rounded-[2.5rem] p-10 group hover:shadow-glow hover:-translate-y-1 transition-all duration-300 border border-transparent hover:border-[#27C281]/20">
+            <div class="flex justify-between items-start mb-10">
+              <div class="flex items-center gap-6">
+                <div class="size-16 rounded-2xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center text-blue-500 group-hover:scale-110 transition-transform shadow-sm border border-blue-100 dark:border-blue-500/10">
+                  <.icon name="hero-globe-alt" class="size-8" />
+                </div>
+                <div>
+                  <h4 class="text-2xl font-black text-[#0B222C] dark:text-white mb-2 tracking-tight group-hover:text-blue-500 transition-colors">{comp["name"]}</h4>
+                  <span class="px-4 py-2 rounded-full bg-blue-50 dark:bg-blue-500/10 text-blue-500 text-[0.6rem] font-black uppercase tracking-widest shadow-sm border border-blue-100 dark:border-blue-500/20">
+                    {comp["pricing_strategy"]}
+                  </span>
+                </div>
+              </div>
+            </div>
 
-            <div class="space-y-8">
+            <p class="text-sm text-[#4a5568] dark:text-[#A0AEC0] font-bold mb-10 leading-loose">
+              {comp["description"]}
+            </p>
+
+            <div class="space-y-10">
               <div>
-                <h5 class="text-[10px] font-black text-zinc-500 uppercase tracking-[0.3em] mb-4">
-                  Core Strengths
+                <h5 class="text-[0.65rem] font-extrabold text-[#A0AEC0] uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
+                   <div class="size-1 rounded-full bg-blue-500"></div> Strengths
                 </h5>
-                <div class="flex flex-wrap gap-2">
+                <div class="flex flex-wrap gap-3">
                   <%= for strength <- comp["strengths"] || [] do %>
-                    <span class="px-3 py-1 rounded-lg bg-emerald-500/10 text-emerald-500 text-xs font-bold border border-emerald-500/20">
+                    <span class="px-4 py-2.5 rounded-2xl bg-[#F9FAFB] dark:bg-white/5 text-[#4a5568] dark:text-[#A0AEC0] text-xs font-extrabold border border-[#F1F3F5] dark:border-white/10 shadow-sm hover:scale-105 transition-transform cursor-default">
                       {strength}
                     </span>
                   <% end %>
                 </div>
               </div>
 
-              <div class="p-6 rounded-2xl bg-primary/5 border border-primary/10">
-                <h5 class="text-[10px] font-black text-primary uppercase tracking-[0.3em] mb-3">
-                  The Market Gap
+              <div class="p-8 rounded-[2rem] bg-gradient-to-br from-[#27C281]/5 to-transparent border border-[#27C281]/10 group-hover:from-[#27C281]/10 transition-all">
+                <h5 class="text-[0.65rem] font-black text-[#27C281] uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                  <.icon name="hero-bolt" class="size-3" /> Market Gap Opportunity
                 </h5>
-                <p class="text-white font-bold leading-relaxed">{comp["market_gap"]}</p>
+                <p class="text-base font-black text-[#0B222C] dark:text-white leading-relaxed">
+                  {comp["market_gap"]}
+                </p>
               </div>
             </div>
           </div>
@@ -1139,62 +714,78 @@ defmodule MarketMindWeb.ProjectLive.Show do
 
   defp lead_results(assigns) do
     ~H"""
-    <div :if={@leads} class="space-y-12 pt-24 border-t border-white/5">
-      <div class="flex items-center gap-4">
-        <div class="size-12 rounded-2xl bg-secondary/10 flex items-center justify-center text-secondary border border-secondary/20">
-          <.icon name="hero-user-group" class="size-6" />
-        </div>
-        <h3 class="text-4xl font-black tracking-tighter">Lead Discovery</h3>
+    <div class="space-y-10">
+      <div class="flex items-center justify-between">
+        <h3 class="text-4xl font-black text-[#0B222C] dark:text-white tracking-tighter">Lead Discovery</h3>
+        <%= if assigns[:loading] do %>
+          <div class="flex items-center gap-2 text-[#27C281] text-xs font-black uppercase tracking-widest animate-pulse">
+            <div class="size-3 border-2 border-[#27C281]/20 border-t-[#27C281] rounded-full animate-spin"></div>
+            Discovering...
+          </div>
+        <% end %>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <%= for segment <- @leads do %>
-          <div class="group/lead relative rounded-[3rem] bg-white/5 border border-white/10 p-12 hover:border-secondary/50 transition-all duration-500">
-            <h4 class="text-3xl font-black mb-6">{segment["name"]}</h4>
+      <div class={[
+        "grid grid-cols-1 md:grid-cols-2 gap-8 transition-opacity duration-300",
+        assigns[:loading] && "opacity-50 pointer-events-none"
+      ]}>
+        <%= if (@leads == [] || is_nil(@leads)) && !assigns[:loading] do %>
+          <div class="md:col-span-2 glass-card rounded-[2.5rem] p-24 text-center group">
+            <div class="mx-auto size-24 rounded-[2rem] bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center text-amber-500 mb-8 shadow-inner group-hover:scale-110 transition-transform duration-500">
+              <.icon name="hero-user-plus" class="size-12" />
+            </div>
+            <h4 class="text-3xl font-black text-[#0B222C] dark:text-white mb-4 tracking-tight">No Leads Yet</h4>
+            <p class="text-[#A0AEC0] mb-12 max-w-sm mx-auto font-bold leading-relaxed">Run the Lead Agent to find your target audience segments.</p>
+            <button
+              phx-click="run_agent"
+              phx-value-agent="leads"
+              class="inline-flex items-center gap-3 px-10 py-5 rounded-2xl bg-[#0B222C] text-white font-black hover:bg-[#122C36] transition-all shadow-xl shadow-[#0B222C]/20 hover:shadow-2xl hover:-translate-y-1 uppercase tracking-widest text-xs"
+            >
+              <.icon name="hero-play" class="size-5" /> Run Agent
+            </button>
+          </div>
+        <% end %>
+        <%= for segment <- @leads || [] do %>
+          <div class="glass-card rounded-[2.5rem] p-10 group hover:shadow-glow hover:-translate-y-1 transition-all duration-300 border border-transparent hover:border-[#27C281]/20">
+            <div class="flex items-center gap-6 mb-10">
+              <div class="size-16 rounded-2xl bg-gradient-to-br from-amber-50 to-white dark:from-amber-900/20 dark:to-transparent flex items-center justify-center text-amber-500 group-hover:scale-110 transition-transform shadow-sm border border-amber-100 dark:border-amber-500/10">
+                <.icon name="hero-user-plus" class="size-8" />
+              </div>
+              <h4 class="text-2xl font-black text-[#0B222C] dark:text-white tracking-tight leading-none group-hover:text-amber-500 transition-colors">{segment["name"]}</h4>
+            </div>
 
-            <div class="space-y-8">
+            <div class="space-y-10">
               <div>
-                <h5 class="text-[10px] font-black text-zinc-500 uppercase tracking-[0.3em] mb-4">
-                  Pain Points
+                <h5 class="text-[0.65rem] font-extrabold text-[#A0AEC0] uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
+                   <div class="size-1 rounded-full bg-red-400"></div> Pain Points
                 </h5>
-                <ul class="space-y-2">
+                <ul class="grid grid-cols-1 gap-3">
                   <%= for pain <- segment["pain_points"] || [] do %>
-                    <li class="flex items-center gap-3 text-zinc-300 font-bold">
-                      <div class="size-1.5 rounded-full bg-secondary"></div>
-                      {pain}
+                    <li class="flex items-start gap-4 text-sm text-[#4a5568] dark:text-[#A0AEC0] font-bold p-4 rounded-2xl bg-[#F9FAFB] dark:bg-white/5 border border-[#F1F3F5] dark:border-white/10 group/item hover:bg-white dark:hover:bg-white/10 transition-colors">
+                      <div class="size-2 rounded-full bg-red-400 mt-2 shrink-0 shadow-lg shadow-red-400/40 group-hover/item:scale-150 transition-transform"></div>
+                      <span class="leading-relaxed">{pain}</span>
                     </li>
                   <% end %>
                 </ul>
               </div>
 
-              <div class="p-8 rounded-[2rem] bg-secondary/5 border border-secondary/10 space-y-6">
-                <div>
-                  <h5 class="text-[10px] font-black text-secondary uppercase tracking-[0.3em] mb-2">
-                    Lead Magnet Idea
+              <div class="grid grid-cols-1 gap-6">
+                <div class="p-8 rounded-[2rem] bg-gradient-to-br from-[#27C281]/5 to-transparent border border-[#27C281]/10 group-hover:from-[#27C281]/10 transition-all">
+                  <h5 class="text-[0.65rem] font-black text-[#27C281] uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                    <.icon name="hero-magnet" class="size-3" /> Lead Magnet Strategy
                   </h5>
-                  <p class="text-white font-black text-lg">{segment["lead_magnet_idea"]}</p>
-                </div>
-                <div class="h-px bg-secondary/10"></div>
-                <div>
-                  <h5 class="text-[10px] font-black text-secondary uppercase tracking-[0.3em] mb-2">
-                    Outreach Hook
-                  </h5>
-                  <p class="text-zinc-300 font-bold italic leading-relaxed">
-                    "{segment["outreach_hook"]}"
+                  <p class="text-lg font-black text-[#0B222C] dark:text-white leading-tight">
+                    {segment["lead_magnet_idea"]}
                   </p>
                 </div>
-              </div>
 
-              <div>
-                <h5 class="text-[10px] font-black text-zinc-500 uppercase tracking-[0.3em] mb-4">
-                  Where to find them
-                </h5>
-                <div class="flex flex-wrap gap-2">
-                  <%= for place <- segment["where_to_find"] || [] do %>
-                    <span class="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-zinc-400 text-xs font-black">
-                      {place}
-                    </span>
-                  <% end %>
+                <div class="p-8 rounded-[2rem] bg-[#F9FAFB]/50 dark:bg-white/5 border border-[#F1F3F5] dark:border-white/10 backdrop-blur-sm">
+                  <h5 class="text-[0.65rem] font-black text-[#A0AEC0] uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                     <.icon name="hero-chat-bubble-bottom-center-text" class="size-3" /> Outreach Hook
+                  </h5>
+                  <p class="text-sm text-[#4a5568] dark:text-[#A0AEC0] font-bold italic leading-relaxed">
+                    "{segment["outreach_hook"]}"
+                  </p>
                 </div>
               </div>
             </div>
@@ -1207,58 +798,93 @@ defmodule MarketMindWeb.ProjectLive.Show do
 
   defp content_results(assigns) do
     ~H"""
-    <div :if={@content} class="space-y-12 pt-24 border-t border-white/5">
-      <div class="flex items-center gap-4">
-        <div class="size-12 rounded-2xl bg-white/10 flex items-center justify-center text-white border border-white/20">
-          <.icon name="hero-megaphone" class="size-6" />
-        </div>
-        <h3 class="text-4xl font-black tracking-tighter">Content Atomizer</h3>
+    <div class="space-y-10">
+      <div class="flex items-center justify-between">
+        <h3 class="text-4xl font-black text-[#0B222C] dark:text-white tracking-tighter">Content Strategy</h3>
+        <%= if assigns[:loading] do %>
+          <div class="flex items-center gap-2 text-[#27C281] text-xs font-black uppercase tracking-widest animate-pulse">
+            <div class="size-3 border-2 border-[#27C281]/20 border-t-[#27C281] rounded-full animate-spin"></div>
+            Generating...
+          </div>
+        <% end %>
       </div>
 
-      <div class="p-12 rounded-[3rem] bg-white/5 border border-white/10 mb-12">
-        <h5 class="text-[10px] font-black text-zinc-500 uppercase tracking-[0.4em] mb-6">
-          Overall Strategy
-        </h5>
-        <p class="text-2xl text-white font-medium leading-relaxed">{@content["strategy"]}</p>
-      </div>
+      <div class={[
+        "space-y-10 transition-opacity duration-300",
+        assigns[:loading] && "opacity-50 pointer-events-none"
+      ]}>
+        <%= if (@content == %{} || is_nil(@content)) && !assigns[:loading] do %>
+          <div class="glass-card rounded-[2.5rem] p-24 text-center group">
+            <div class="mx-auto size-24 rounded-[2rem] bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center text-indigo-500 mb-8 shadow-inner group-hover:scale-110 transition-transform duration-500">
+              <.icon name="hero-megaphone" class="size-12" />
+            </div>
+            <h4 class="text-3xl font-black text-[#0B222C] dark:text-white mb-4 tracking-tight">No Content Strategy Yet</h4>
+            <p class="text-[#A0AEC0] mb-12 max-w-sm mx-auto font-bold leading-relaxed">Run the Content Agent to generate a multi-platform strategy.</p>
+            <button
+              phx-click="run_agent"
+              phx-value-agent="content"
+              class="inline-flex items-center gap-3 px-10 py-5 rounded-2xl bg-[#0B222C] text-white font-black hover:bg-[#122C36] transition-all shadow-xl shadow-[#0B222C]/20 hover:shadow-2xl hover:-translate-y-1 uppercase tracking-widest text-xs"
+            >
+              <.icon name="hero-play" class="size-5" /> Run Agent
+            </button>
+          </div>
+        <% else %>
+          <div class="bg-[#0B222C] dark:bg-[#122C36] rounded-[2.5rem] shadow-soft p-12 relative overflow-hidden group hover:shadow-glow transition-all duration-500">
+            <div class="absolute inset-0 bg-[url('/images/noise.png')] opacity-20 mix-blend-overlay"></div>
+            <div class="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 group-hover:scale-110 transition-all duration-700 ease-out">
+              <.icon name="hero-sparkles" class="size-64 text-white" />
+            </div>
+            <div class="relative z-10">
+              <h3 class="text-[0.65rem] font-black text-[#27C281] uppercase tracking-[0.2em] mb-8 flex items-center gap-2">
+                 <div class="size-1.5 rounded-full bg-[#27C281] animate-pulse"></div> Master Strategy
+              </h3>
+              <p class="text-3xl font-bold text-white leading-relaxed max-w-4xl">
+                {@content["strategy"]}
+              </p>
+            </div>
+          </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <%= for atom <- @content["content_atoms"] || [] do %>
-          <div class="group/atom relative rounded-[3rem] bg-zinc-900/50 border border-white/10 p-12 hover:bg-white/5 transition-all duration-500">
-            <div class="flex justify-between items-center mb-8">
-              <div class="flex items-center gap-3">
-                <div class="size-10 rounded-xl bg-white/5 flex items-center justify-center">
-                  <.icon
-                    name={
-                      case atom["platform"] do
-                        "Twitter" -> "hero-chat-bubble-left-right"
-                        "LinkedIn" -> "hero-user-circle"
-                        _ -> "hero-document-text"
-                      end
-                    }
-                    class="size-5 text-zinc-400"
-                  />
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <%= for atom <- @content["content_atoms"] || [] do %>
+              <div class="glass-card rounded-[2.5rem] overflow-hidden flex flex-col group hover:shadow-glow hover:-translate-y-1 transition-all duration-300 border border-transparent hover:border-[#27C281]/20">
+                <div class="p-10 border-b border-[#F1F3F5] dark:border-white/5 flex items-center justify-between bg-[#F9FAFB]/50 dark:bg-white/5 backdrop-blur-sm">
+                  <div class="flex items-center gap-6">
+                    <div class="size-14 rounded-2xl bg-gradient-to-br from-indigo-50 to-white dark:from-indigo-900/20 dark:to-transparent flex items-center justify-center text-indigo-500 group-hover:scale-110 transition-transform shadow-sm border border-indigo-100 dark:border-indigo-500/10">
+                      <.icon
+                        name={
+                          case atom["platform"] do
+                            "Twitter" -> "hero-chat-bubble-left-right"
+                            "LinkedIn" -> "hero-user-circle"
+                            _ -> "hero-document-text"
+                          end
+                        }
+                        class="size-7"
+                      />
+                    </div>
+                    <div>
+                      <h4 class="text-xl font-black text-[#0B222C] dark:text-white tracking-tight leading-none mb-1 group-hover:text-indigo-500 transition-colors">{atom["platform"]}</h4>
+                      <p class="text-[0.65rem] text-[#A0AEC0] font-black uppercase tracking-widest">{atom["format"]}</p>
+                    </div>
+                  </div>
                 </div>
-                <span class="text-sm font-black uppercase tracking-widest text-zinc-500">
-                  {atom["platform"]}
-                </span>
-              </div>
-              <span class="text-xs font-bold text-zinc-600">{atom["format"]}</span>
-            </div>
 
-            <h4 class="text-2xl font-black text-white mb-6 leading-tight">
-              {atom["hook"]}
-            </h4>
+                <div class="p-10 flex-1 space-y-8">
+                  <h5 class="text-xl font-black text-[#0B222C] dark:text-white leading-tight group-hover:text-indigo-500 transition-colors">
+                    {atom["hook"]}
+                  </h5>
+                  <div class="p-8 rounded-[2rem] bg-[#F9FAFB] dark:bg-white/5 text-sm text-[#4a5568] dark:text-[#A0AEC0] font-bold leading-loose whitespace-pre-line border border-[#F1F3F5] dark:border-white/10">
+                    {atom["body_outline"]}
+                  </div>
+                </div>
 
-            <div class="space-y-6">
-              <div class="p-6 rounded-2xl bg-white/5 border border-white/5 text-zinc-400 font-medium leading-relaxed whitespace-pre-line">
-                {atom["body_outline"]}
+                <div class="p-8 bg-[#F9FAFB]/50 dark:bg-white/5 border-t border-[#F1F3F5] dark:border-white/5 backdrop-blur-sm">
+                  <div class="flex items-center gap-3 text-[0.65rem] font-black text-[#27C281] uppercase tracking-widest">
+                    <.icon name="hero-cursor-arrow-rays" class="size-4 animate-pulse" />
+                    CTA: {atom["cta"]}
+                  </div>
+                </div>
               </div>
-              <div class="flex items-center gap-3 text-primary font-black">
-                <.icon name="hero-cursor-arrow-rays" class="size-5" />
-                {atom["cta"]}
-              </div>
-            </div>
+            <% end %>
           </div>
         <% end %>
       </div>
@@ -1268,122 +894,120 @@ defmodule MarketMindWeb.ProjectLive.Show do
 
   defp cro_results(assigns) do
     ~H"""
-    <div :if={@audit} class="space-y-12 pt-24 border-t border-white/5">
-      <div class="flex items-center gap-4">
-        <div class="size-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 border border-emerald-500/20">
-          <.icon name="hero-presentation-chart-line" class="size-6" />
-        </div>
-        <h3 class="text-4xl font-black tracking-tighter">Landing Page Audit</h3>
+    <div class="space-y-10">
+      <div class="flex items-center justify-between">
+        <h3 class="text-3xl font-extrabold text-[#0B222C] dark:text-white tracking-tight">Conversion Audit</h3>
+        <%= if assigns[:loading] do %>
+          <div class="flex items-center gap-2 text-[#27C281] text-sm font-extrabold uppercase tracking-widest">
+            <div class="size-4 border-2 border-[#27C281]/20 border-t-[#27C281] rounded-full animate-spin"></div>
+            Auditing...
+          </div>
+        <% end %>
       </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        <div class="lg:col-span-1 p-12 rounded-[3rem] bg-emerald-500/5 border border-emerald-500/10 flex flex-col items-center justify-center text-center">
-          <div class="text-8xl font-black text-emerald-500 mb-4">{@audit["overall_score"]}%</div>
-          <div class="text-sm font-black text-zinc-500 uppercase tracking-[0.3em]">
-            Overall CRO Score
+      <div class={[
+        "space-y-12 transition-opacity duration-300",
+        assigns[:loading] && "opacity-50 pointer-events-none"
+      ]}>
+        <%= if (@audit == %{} || is_nil(@audit)) && !assigns[:loading] do %>
+          <div class="bg-white dark:bg-[#122C36] rounded-[2.5rem] shadow-soft border border-[#F1F3F5] dark:border-white/5 p-20 text-center">
+            <div class="mx-auto size-24 rounded-3xl bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center text-[#27C281] mb-8 shadow-sm">
+              <.icon name="hero-presentation-chart-line" class="size-12" />
+            </div>
+            <h4 class="text-2xl font-extrabold text-[#0B222C] dark:text-white mb-4 tracking-tight">No Audit Yet</h4>
+            <p class="text-[#A0AEC0] mb-10 max-w-sm mx-auto font-bold">Run the CRO Agent to analyze your landing page conversion potential.</p>
+            <button
+              phx-click="run_agent"
+              phx-value-agent="cro"
+              class="inline-flex items-center gap-3 px-10 py-4 rounded-2xl bg-[#27C281] text-[#0B222C] font-extrabold hover:bg-[#27C281]/90 transition-all shadow-xl shadow-[#27C281]/20 uppercase tracking-widest text-xs"
+            >
+              <.icon name="hero-play" class="size-5" /> Run Agent
+            </button>
           </div>
-        </div>
+        <% else %>
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div class="bg-[#0B222C] dark:bg-[#122C36] rounded-[2.5rem] shadow-soft p-10 flex flex-col items-center justify-center text-center group transition-all">
+              <div class="text-6xl font-extrabold text-[#27C281] mb-4 group-hover:scale-110 transition-transform">{@audit["overall_score"]}%</div>
+              <div class="text-[0.65rem] font-extrabold text-[#A0AEC0] uppercase tracking-[0.2em]">Health Score</div>
+            </div>
 
-        <div class="lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div class="p-10 rounded-[2.5rem] bg-white/5 border border-white/10">
-            <div class="text-xs font-black text-zinc-500 uppercase tracking-widest mb-4">Clarity</div>
-            <div class="flex items-end gap-2">
-              <div class="text-4xl font-black text-white">{@audit["clarity_rating"]}</div>
-              <div class="text-zinc-600 font-bold mb-1">/ 10</div>
-            </div>
-            <div class="mt-6 h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-              <div
-                class="h-full bg-emerald-500 rounded-full"
-                style={"width: #{@audit["clarity_rating"] * 10}%"}
-              >
-              </div>
-            </div>
-          </div>
-
-          <div class="p-10 rounded-[2.5rem] bg-white/5 border border-white/10">
-            <div class="text-xs font-black text-zinc-500 uppercase tracking-widest mb-4">Trust</div>
-            <div class="flex items-end gap-2">
-              <div class="text-4xl font-black text-white">{@audit["trust_rating"]}</div>
-              <div class="text-zinc-600 font-bold mb-1">/ 10</div>
-            </div>
-            <div class="mt-6 h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-              <div
-                class="h-full bg-emerald-500 rounded-full"
-                style={"width: #{@audit["trust_rating"] * 10}%"}
-              >
-              </div>
-            </div>
-          </div>
-
-          <div class="p-10 rounded-[2.5rem] bg-white/5 border border-white/10">
-            <div class="text-xs font-black text-zinc-500 uppercase tracking-widest mb-4">CTA</div>
-            <div class="flex items-end gap-2">
-              <div class="text-4xl font-black text-white">{@audit["cta_rating"]}</div>
-              <div class="text-zinc-600 font-bold mb-1">/ 10</div>
-            </div>
-            <div class="mt-6 h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-              <div
-                class="h-full bg-emerald-500 rounded-full"
-                style={"width: #{@audit["cta_rating"] * 10}%"}
-              >
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
-        <div class="space-y-8">
-          <h4 class="text-2xl font-black text-white">Key Findings</h4>
-          <div class="space-y-6">
-            <%= for finding <- @audit["findings"] || [] do %>
-              <div class="p-8 rounded-[2rem] bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
-                <div class="flex justify-between items-start mb-4">
-                  <span class="text-xs font-black text-emerald-500 uppercase tracking-widest">
-                    {finding["area"]}
-                  </span>
-                  <span class={[
-                    "px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest",
-                    if(finding["impact"] == "High",
-                      do: "bg-rose-500/10 text-rose-500",
-                      else: "bg-amber-500/10 text-amber-500"
-                    )
-                  ]}>
-                    {finding["impact"]} Impact
-                  </span>
+            <%= for {label, value} <- [
+              {"Clarity", @audit["clarity_rating"]},
+              {"Trust", @audit["trust_rating"]},
+              {"Conversion", @audit["cta_rating"]}
+            ] do %>
+              <div class="bg-white dark:bg-[#122C36] rounded-[2rem] shadow-soft border border-[#F1F3F5] dark:border-white/5 p-10 group hover:border-[#27C281]/30 transition-all">
+                <h4 class="text-[0.65rem] font-extrabold text-[#A0AEC0] uppercase tracking-[0.2em] mb-8">{label}</h4>
+                <div class="flex items-end gap-2 mb-8">
+                  <div class="text-5xl font-extrabold text-[#0B222C] dark:text-white">{value}</div>
+                  <div class="text-sm font-bold text-[#A0AEC0] mb-2 uppercase">/ 10</div>
                 </div>
-                <h5 class="text-xl font-black text-white mb-3">{finding["issue"]}</h5>
-                <p class="text-zinc-400 font-bold leading-relaxed">{finding["recommendation"]}</p>
+                <div class="h-2.5 w-full bg-[#F9FAFB] dark:bg-white/5 rounded-full overflow-hidden shadow-inner">
+                  <div
+                    class="h-full rounded-full bg-[#27C281] shadow-lg shadow-[#27C281]/40"
+                    style={"width: #{value * 10}%"}
+                  >
+                  </div>
+                </div>
               </div>
             <% end %>
           </div>
-        </div>
 
-        <div class="space-y-8">
-          <h4 class="text-2xl font-black text-white">Hero Section Rewrite</h4>
-          <div class="relative group/hero">
-            <div class="absolute -inset-1 bg-linear-to-r from-emerald-500/20 to-primary/20 rounded-[3rem] blur-xl opacity-50">
-            </div>
-            <div class="relative p-12 rounded-[3rem] bg-zinc-900 border border-emerald-500/30 backdrop-blur-xl">
-              <div class="size-12 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 mb-8">
-                <.icon name="hero-pencil-square" class="size-6" />
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+            <div class="space-y-10">
+              <h4 class="text-2xl font-extrabold text-[#0B222C] dark:text-white tracking-tight">Key Findings</h4>
+              <div class="space-y-8">
+                <%= for finding <- @audit["findings"] || [] do %>
+                  <div class="bg-white dark:bg-[#122C36] rounded-[2.5rem] shadow-soft border border-[#F1F3F5] dark:border-white/5 p-10 group hover:border-[#27C281]/30 transition-all">
+                    <div class="flex justify-between items-start mb-10">
+                      <span class="px-5 py-2 rounded-xl bg-[#F9FAFB] dark:bg-white/5 text-[#A0AEC0] text-[0.65rem] font-extrabold uppercase tracking-widest border border-[#F1F3F5] dark:border-white/10 shadow-sm">
+                        {finding["area"]}
+                      </span>
+                      <div class={[
+                        "flex items-center gap-2 px-5 py-2 rounded-xl text-[0.65rem] font-extrabold uppercase tracking-widest shadow-sm",
+                        if(finding["impact"] == "High", do: "bg-red-50 dark:bg-red-500/10 text-red-500", else: "bg-amber-50 dark:bg-amber-500/10 text-amber-500")
+                      ]}>
+                        <div class={["size-2 rounded-full", if(finding["impact"] == "High", do: "bg-red-500 shadow-lg shadow-red-500/40", else: "bg-amber-500 shadow-lg shadow-amber-500/40")]}></div>
+                        {finding["impact"]} Impact
+                      </div>
+                    </div>
+                    <h5 class="text-xl font-extrabold text-[#0B222C] dark:text-white mb-4 tracking-tight">{finding["issue"]}</h5>
+                    <p class="text-base text-[#4a5568] dark:text-[#A0AEC0] font-bold leading-relaxed">
+                      {finding["recommendation"]}
+                    </p>
+                  </div>
+                <% end %>
               </div>
-              <h5 class="text-xs font-black text-zinc-500 uppercase tracking-[0.4em] mb-6">
-                Suggested Headline
-              </h5>
-              <p class="text-4xl font-black text-white tracking-tight mb-10 leading-tight">
-                {@audit["hero_rewrite"]["headline"]}
-              </p>
-              <div class="h-px bg-white/10 mb-10"></div>
-              <h5 class="text-xs font-black text-zinc-500 uppercase tracking-[0.4em] mb-6">
-                Suggested Subheadline
-              </h5>
-              <p class="text-2xl text-zinc-300 font-medium leading-relaxed">
-                {@audit["hero_rewrite"]["subheadline"]}
-              </p>
+            </div>
+
+            <div class="space-y-10">
+              <h4 class="text-2xl font-extrabold text-[#0B222C] dark:text-white tracking-tight">Elevated Copywriting</h4>
+              <div class="bg-[#27C281] rounded-[2.5rem] p-12 relative overflow-hidden group shadow-xl shadow-[#27C281]/20">
+                <div class="absolute top-0 right-0 p-10 opacity-20 -rotate-12 group-hover:scale-110 transition-transform">
+                  <.icon name="hero-pencil-square" class="size-48 text-[#0B222C]" />
+                </div>
+                <div class="relative z-10 space-y-12">
+                  <div class="size-16 rounded-2xl bg-[#0B222C]/10 flex items-center justify-center text-[#0B222C] mb-10 shadow-sm">
+                    <.icon name="hero-sparkles" class="size-8" />
+                  </div>
+                  <div>
+                    <h5 class="text-[0.65rem] font-extrabold text-[#0B222C]/60 uppercase tracking-[0.2em] mb-6">Suggested Headline</h5>
+                    <p class="text-4xl font-extrabold text-[#0B222C] leading-tight tracking-tight">
+                      {@audit["hero_rewrite"]["headline"]}
+                    </p>
+                  </div>
+                  <div class="h-px bg-[#0B222C]/10"></div>
+                  <div>
+                    <h5 class="text-[0.65rem] font-extrabold text-[#0B222C]/60 uppercase tracking-[0.2em] mb-6">Suggested Subheadline</h5>
+                    <p class="text-xl text-[#0B222C]/80 font-bold leading-relaxed">
+                      {@audit["hero_rewrite"]["subheadline"]}
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
+        <% end %>
       </div>
     </div>
     """
@@ -1391,86 +1015,101 @@ defmodule MarketMindWeb.ProjectLive.Show do
 
   defp aeo_results(assigns) do
     ~H"""
-    <div :if={@strategy} class="space-y-12 pt-24 border-t border-white/5">
-      <div class="flex items-center gap-4">
-        <div class="size-12 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-500 border border-amber-500/20">
-          <.icon name="hero-cpu-chip" class="size-6" />
-        </div>
-        <h3 class="text-4xl font-black tracking-tighter">AEO Strategy (AI Search Optimization)</h3>
+    <div class="space-y-10">
+      <div class="flex items-center justify-between">
+        <h3 class="text-4xl font-black text-[#0B222C] dark:text-white tracking-tighter">AEO Strategy</h3>
+        <%= if assigns[:loading] do %>
+          <div class="flex items-center gap-2 text-[#27C281] text-xs font-black uppercase tracking-widest animate-pulse">
+            <div class="size-3 border-2 border-[#27C281]/20 border-t-[#27C281] rounded-full animate-spin"></div>
+            Optimizing...
+          </div>
+        <% end %>
       </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div class="lg:col-span-2 space-y-8">
-          <h4 class="text-2xl font-black text-white">Semantic Clusters</h4>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <%= for cluster <- @strategy["semantic_clusters"] || [] do %>
-              <div class="p-8 rounded-[2rem] bg-white/5 border border-white/10 hover:border-amber-500/30 transition-all">
-                <h5 class="text-xl font-black text-white mb-4">{cluster["topic"]}</h5>
-                <div class="flex flex-wrap gap-2 mb-6">
-                  <%= for keyword <- cluster["keywords"] || [] do %>
-                    <span class="px-3 py-1 rounded-lg bg-amber-500/5 text-amber-500 text-[10px] font-black uppercase tracking-widest border border-amber-500/10">
-                      {keyword}
-                    </span>
-                  <% end %>
-                </div>
-                <p class="text-zinc-400 font-bold text-sm leading-relaxed">{cluster["intent_gap"]}</p>
-              </div>
-            <% end %>
+      <div class={[
+        "space-y-10 transition-opacity duration-300",
+        assigns[:loading] && "opacity-50 pointer-events-none"
+      ]}>
+        <%= if is_nil(@aeo) && !assigns[:loading] do %>
+          <div class="glass-card rounded-[2.5rem] p-24 text-center group">
+            <div class="mx-auto size-24 rounded-[2rem] bg-rose-50 dark:bg-rose-500/10 flex items-center justify-center text-rose-500 mb-8 shadow-inner group-hover:scale-110 transition-transform duration-500">
+              <.icon name="hero-cpu-chip" class="size-12" />
+            </div>
+            <h4 class="text-3xl font-black text-[#0B222C] dark:text-white mb-4 tracking-tight">No AEO Strategy Yet</h4>
+            <p class="text-[#A0AEC0] mb-12 max-w-sm mx-auto font-bold leading-relaxed">Run the AEO Agent to optimize for AI answer engines.</p>
+            <button
+              phx-click="run_agent"
+              phx-value-agent="aeo"
+              class="inline-flex items-center gap-3 px-10 py-5 rounded-2xl bg-[#0B222C] text-white font-black hover:bg-[#122C36] transition-all shadow-xl shadow-[#0B222C]/20 hover:shadow-2xl hover:-translate-y-1 uppercase tracking-widest text-xs"
+            >
+              <.icon name="hero-play" class="size-5" /> Run Agent
+            </button>
           </div>
-        </div>
+        <% else %>
+          <div class="bg-[#0B222C] dark:bg-[#122C36] rounded-[2.5rem] shadow-soft p-12 relative overflow-hidden group hover:shadow-glow transition-all duration-500">
+             <div class="absolute inset-0 bg-[url('/images/noise.png')] opacity-20 mix-blend-overlay"></div>
+             <div class="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 group-hover:scale-110 transition-all duration-700 ease-out">
+               <.icon name="hero-cpu-chip" class="size-64 text-white" />
+             </div>
+            <div class="relative z-10">
+              <h3 class="text-[0.65rem] font-black text-[#27C281] uppercase tracking-[0.2em] mb-8 flex items-center gap-2">
+                 <div class="size-1.5 rounded-full bg-[#27C281] animate-pulse"></div> Overview
+              </h3>
+              <p class="text-3xl font-bold text-white leading-relaxed max-w-4xl">
+                {@aeo["overview"]}
+              </p>
+            </div>
+          </div>
 
-        <div class="space-y-8">
-          <h4 class="text-2xl font-black text-white">Entity Graph</h4>
-          <div class="p-10 rounded-[3rem] bg-zinc-900 border border-white/10 space-y-8">
-            <%= for entity <- @strategy["entity_graph"] || [] do %>
-              <div class="space-y-3">
-                <div class="flex justify-between items-center">
-                  <span class="text-sm font-black text-white">{entity["entity"]}</span>
-                  <span class="text-[10px] font-black text-zinc-500 uppercase tracking-widest">
-                    {entity["type"]}
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="glass-card rounded-[2.5rem] p-10 group hover:shadow-glow transition-all duration-300 border border-transparent hover:border-[#27C281]/20">
+               <div class="flex items-center gap-4 mb-8">
+                  <div class="size-12 rounded-xl bg-gradient-to-br from-rose-50 to-white dark:from-rose-900/20 dark:to-transparent flex items-center justify-center text-rose-500 shadow-sm border border-rose-100 dark:border-rose-500/10">
+                    <.icon name="hero-tag" class="size-6" />
+                  </div>
+                  <h4 class="text-2xl font-black text-[#0B222C] dark:text-white tracking-tight">Keywords & Phrases</h4>
+               </div>
+              <div class="flex flex-wrap gap-3">
+                <%= for phrase <- @aeo["keywords"] || [] do %>
+                  <span class="px-5 py-2.5 rounded-xl bg-[#F9FAFB] dark:bg-white/5 text-[#4a5568] dark:text-[#A0AEC0] text-sm font-black border border-[#F1F3F5] dark:border-white/10 hover:bg-[#0B222C] hover:text-white dark:hover:bg-white transition-colors cursor-default">
+                    {phrase}
                   </span>
-                </div>
-                <div class="flex flex-wrap gap-2">
-                  <%= for rel <- entity["relationships"] || [] do %>
-                    <span class="px-2 py-1 rounded-md bg-white/5 text-zinc-500 text-[10px] font-bold border border-white/5">
-                      → {rel}
-                    </span>
-                  <% end %>
-                </div>
-              </div>
-            <% end %>
-          </div>
-        </div>
-      </div>
-
-      <div class="p-12 rounded-[3rem] bg-amber-500/5 border border-amber-500/10">
-        <h4 class="text-2xl font-black text-white mb-8">Direct Answer Optimization</h4>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
-          <%= for qa <- @strategy["direct_answer_targets"] || [] do %>
-            <div class="space-y-4">
-              <div class="flex items-start gap-4">
-                <div class="size-8 rounded-lg bg-amber-500/20 flex items-center justify-center text-amber-500 shrink-0 mt-1">
-                  <span class="font-black text-xs">Q</span>
-                </div>
-                <p class="text-xl font-black text-white leading-tight">{qa["question"]}</p>
-              </div>
-              <div class="flex items-start gap-4">
-                <div class="size-8 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-500 shrink-0 mt-1">
-                  <span class="font-black text-xs">A</span>
-                </div>
-                <p class="text-zinc-400 font-bold leading-relaxed italic">
-                  "{qa["optimized_answer"]}"
-                </p>
+                <% end %>
               </div>
             </div>
-          <% end %>
-        </div>
+
+            <div class="glass-card rounded-[2.5rem] p-10 group hover:shadow-glow transition-all duration-300 border border-transparent hover:border-[#27C281]/20">
+               <div class="flex items-center gap-4 mb-8">
+                  <div class="size-12 rounded-xl bg-gradient-to-br from-indigo-50 to-white dark:from-indigo-900/20 dark:to-transparent flex items-center justify-center text-indigo-500 shadow-sm border border-indigo-100 dark:border-indigo-500/10">
+                    <.icon name="hero-adjustments-horizontal" class="size-6" />
+                  </div>
+                  <h4 class="text-2xl font-black text-[#0B222C] dark:text-white tracking-tight">Platform Optimizations</h4>
+               </div>
+              <div class="space-y-6">
+                <%= for {platform, tips} <- @aeo["platform_specifics"] || %{} do %>
+                  <div class="p-6 rounded-[2rem] bg-[#F9FAFB]/50 dark:bg-white/5 border border-[#F1F3F5] dark:border-white/10 backdrop-blur-sm group/item">
+                    <h5 class="text-sm font-black text-[#0B222C] dark:text-white mb-3 flex items-center gap-2">
+                       <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 group-hover/item:scale-150 transition-transform"></span>
+                       {String.capitalize(platform)}
+                    </h5>
+                    <p class="text-sm text-[#4a5568] dark:text-[#A0AEC0] font-bold leading-relaxed">{tips}</p>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+          </div>
+        <% end %>
       </div>
     </div>
     """
   end
 
   # Event Handlers
+
+  @impl true
+  def handle_event("switch_tab", %{"tab" => tab}, socket) do
+    {:noreply, assign(socket, :active_tab, tab)}
+  end
 
   @impl true
   def handle_event("set_primary_persona", %{"id" => id}, socket) do

@@ -56,23 +56,28 @@ defmodule MarketMindWeb.CoreComponents do
       id={@id}
       phx-click={JS.push("lv:clear-flash", value: %{key: @kind}) |> hide("##{@id}")}
       role="alert"
-      class="toast toast-top toast-end z-50"
+      class="fixed top-6 right-6 z-50 w-80 sm:w-96 animate-in slide-in-from-right duration-300"
       {@rest}
     >
       <div class={[
-        "alert w-80 sm:w-96 max-w-80 sm:max-w-96 text-wrap",
-        @kind == :info && "alert-info",
-        @kind == :error && "alert-error"
+        "flex items-start gap-4 p-5 rounded-3xl shadow-2xl border soft-card",
+        @kind == :info && "bg-white dark:bg-[#122C36] border-[#F1F3F5] dark:border-white/5 text-[#4a5568] dark:text-[#A0AEC0]",
+        @kind == :error && "bg-red-500 text-white border-red-600"
       ]}>
-        <.icon :if={@kind == :info} name="hero-information-circle" class="size-5 shrink-0" />
-        <.icon :if={@kind == :error} name="hero-exclamation-circle" class="size-5 shrink-0" />
-        <div>
-          <p :if={@title} class="font-semibold">{@title}</p>
-          <p>{msg}</p>
+        <div class={[
+          "size-10 rounded-2xl flex items-center justify-center shrink-0 shadow-sm",
+          @kind == :info && "bg-primary/10 text-primary",
+          @kind == :error && "bg-white/20 text-white"
+        ]}>
+          <.icon :if={@kind == :info} name="hero-information-circle" class="size-6" />
+          <.icon :if={@kind == :error} name="hero-exclamation-circle" class="size-6" />
         </div>
-        <div class="flex-1" />
-        <button type="button" class="group self-start cursor-pointer" aria-label={gettext("close")}>
-          <.icon name="hero-x-mark" class="size-5 opacity-40 group-hover:opacity-70" />
+        <div class="flex-1 pt-1">
+          <p :if={@title} class="text-sm font-bold mb-0.5">{@title}</p>
+          <p class="text-sm font-bold leading-relaxed">{msg}</p>
+        </div>
+        <button type="button" class="size-8 flex items-center justify-center rounded-xl hover:bg-black/5 transition-colors" aria-label={gettext("close")}>
+          <.icon name="hero-x-mark" class="size-5 opacity-50" />
         </button>
       </div>
     </div>
@@ -90,15 +95,22 @@ defmodule MarketMindWeb.CoreComponents do
   """
   attr :rest, :global, include: ~w(href navigate patch method download name value disabled)
   attr :class, :any
-  attr :variant, :string, values: ~w(primary)
+  attr :variant, :string, values: ~w(primary outline)
   slot :inner_block, required: true
 
   def button(%{rest: rest} = assigns) do
-    variants = %{"primary" => "btn-primary", nil => "btn-primary btn-soft"}
+    variants = %{
+      "primary" => "bg-primary text-white hover:bg-primary/90 shadow-lg shadow-primary/20",
+      "outline" => "border-2 border-[#edf2f7] text-[#718096] hover:bg-gray-50",
+      nil => "bg-primary/10 text-primary hover:bg-primary/20"
+    }
 
     assigns =
       assign_new(assigns, :class, fn ->
-        ["btn", Map.fetch!(variants, assigns[:variant])]
+        [
+          "inline-flex items-center justify-center px-8 py-3.5 rounded-2xl font-extrabold text-sm transition-all duration-200 active:scale-95",
+          Map.fetch!(variants, assigns[:variant])
+        ]
       end)
 
     if rest[:href] || rest[:navigate] || rest[:patch] do
@@ -205,8 +217,8 @@ defmodule MarketMindWeb.CoreComponents do
       end)
 
     ~H"""
-    <div class="fieldset mb-2">
-      <label>
+    <div class="mb-6">
+      <label class="flex items-center gap-3 cursor-pointer group">
         <input
           type="hidden"
           name={@name}
@@ -214,16 +226,20 @@ defmodule MarketMindWeb.CoreComponents do
           disabled={@rest[:disabled]}
           form={@rest[:form]}
         />
-        <span class="label">
-          <input
-            type="checkbox"
-            id={@id}
-            name={@name}
-            value="true"
-            checked={@checked}
-            class={@class || "checkbox checkbox-sm"}
-            {@rest}
-          />{@label}
+        <input
+          type="checkbox"
+          id={@id}
+          name={@name}
+          value="true"
+          checked={@checked}
+          class={[
+            "size-5 rounded-lg border-[#F1F3F5] dark:border-white/10 text-primary focus:ring-primary/20 transition-all cursor-pointer bg-white dark:bg-white/5",
+            @class
+          ]}
+          {@rest}
+        />
+        <span class="text-sm font-bold text-[#4a5568] dark:text-[#A0AEC0] group-hover:text-[#0B222C] dark:group-hover:text-white transition-colors">
+          {@label}
         </span>
       </label>
       <.error :for={msg <- @errors}>{msg}</.error>
@@ -233,13 +249,19 @@ defmodule MarketMindWeb.CoreComponents do
 
   def input(%{type: "select"} = assigns) do
     ~H"""
-    <div class="fieldset mb-2">
+    <div class="mb-6">
       <label>
-        <span :if={@label} class="label mb-1">{@label}</span>
+        <span :if={@label} class="block text-sm font-bold text-[#1a202c] mb-2 ml-1">
+          {@label}
+        </span>
         <select
           id={@id}
           name={@name}
-          class={[@class || "w-full select", @errors != [] && (@error_class || "select-error")]}
+          class={[
+            "block w-full rounded-2xl border-[#F1F3F5] dark:border-white/10 bg-[#F9FAFB] dark:bg-white/5 text-[#4a5568] dark:text-[#A0AEC0] text-sm font-bold focus:bg-white dark:focus:bg-white/10 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all h-[56px] px-5",
+            @errors != [] && "border-red-500 focus:border-red-500 focus:ring-red-500/10",
+            @class
+          ]}
           multiple={@multiple}
           {@rest}
         >
@@ -254,15 +276,18 @@ defmodule MarketMindWeb.CoreComponents do
 
   def input(%{type: "textarea"} = assigns) do
     ~H"""
-    <div class="fieldset mb-2">
+    <div class="mb-6">
       <label>
-        <span :if={@label} class="label mb-1">{@label}</span>
+        <span :if={@label} class="block text-sm font-bold text-[#1a202c] mb-2 ml-1">
+          {@label}
+        </span>
         <textarea
           id={@id}
           name={@name}
           class={[
-            @class || "w-full textarea",
-            @errors != [] && (@error_class || "textarea-error")
+            "block w-full rounded-2xl border-[#F1F3F5] dark:border-white/10 bg-[#F9FAFB] dark:bg-white/5 text-[#4a5568] dark:text-[#A0AEC0] text-sm font-bold focus:bg-white dark:focus:bg-white/10 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all min-h-[140px] p-5",
+            @errors != [] && "border-red-500 focus:border-red-500 focus:ring-red-500/10",
+            @class
           ]}
           {@rest}
         >{Phoenix.HTML.Form.normalize_value("textarea", @value)}</textarea>
@@ -275,17 +300,20 @@ defmodule MarketMindWeb.CoreComponents do
   # All other inputs text, datetime-local, url, password, etc. are handled here...
   def input(assigns) do
     ~H"""
-    <div class="fieldset mb-2">
+    <div class="mb-6">
       <label>
-        <span :if={@label} class="label mb-1">{@label}</span>
+        <span :if={@label} class="block text-sm font-bold text-[#1a202c] mb-2 ml-1">
+          {@label}
+        </span>
         <input
           type={@type}
           name={@name}
           id={@id}
           value={Phoenix.HTML.Form.normalize_value(@type, @value)}
           class={[
-            @class || "w-full input",
-            @errors != [] && (@error_class || "input-error")
+            "block w-full rounded-2xl border-[#F1F3F5] dark:border-white/10 bg-[#F9FAFB] dark:bg-white/5 text-[#4a5568] dark:text-[#A0AEC0] text-sm font-bold focus:bg-white dark:focus:bg-white/10 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all h-[56px] px-5",
+            @errors != [] && "border-red-500 focus:border-red-500 focus:ring-red-500/10",
+            @class
           ]}
           {@rest}
         />
@@ -298,8 +326,8 @@ defmodule MarketMindWeb.CoreComponents do
   # Helper used by inputs to generate form errors
   defp error(assigns) do
     ~H"""
-    <p class="mt-1.5 flex gap-2 items-center text-sm text-error">
-      <.icon name="hero-exclamation-circle" class="size-5" />
+    <p class="mt-2 flex gap-2 items-center text-xs font-bold text-red-500 ml-1">
+      <.icon name="hero-exclamation-circle" class="size-4" />
       {render_slot(@inner_block)}
     </p>
     """
@@ -314,16 +342,16 @@ defmodule MarketMindWeb.CoreComponents do
 
   def header(assigns) do
     ~H"""
-    <header class={[@actions != [] && "flex items-center justify-between gap-6", "pb-4"]}>
+    <header class={[@actions != [] && "flex items-center justify-between gap-6", "mb-10"]}>
       <div>
-        <h1 class="text-lg font-semibold leading-8">
+        <h1 class="text-3xl font-extrabold text-[#0B222C] dark:text-white tracking-tight">
           {render_slot(@inner_block)}
         </h1>
-        <p :if={@subtitle != []} class="text-sm text-base-content/70">
+        <p :if={@subtitle != []} class="text-base font-bold text-[#718096] dark:text-[#A0AEC0] mt-2">
           {render_slot(@subtitle)}
         </p>
       </div>
-      <div class="flex-none">{render_slot(@actions)}</div>
+      <div class="flex items-center gap-3">{render_slot(@actions)}</div>
     </header>
     """
   end
@@ -360,34 +388,38 @@ defmodule MarketMindWeb.CoreComponents do
       end
 
     ~H"""
-    <table class="table table-zebra">
-      <thead>
-        <tr>
-          <th :for={col <- @col}>{col[:label]}</th>
-          <th :if={@action != []}>
-            <span class="sr-only">{gettext("Actions")}</span>
-          </th>
-        </tr>
-      </thead>
-      <tbody id={@id} phx-update={is_struct(@rows, Phoenix.LiveView.LiveStream) && "stream"}>
-        <tr :for={row <- @rows} id={@row_id && @row_id.(row)}>
-          <td
-            :for={col <- @col}
-            phx-click={@row_click && @row_click.(row)}
-            class={@row_click && "hover:cursor-pointer"}
-          >
-            {render_slot(col, @row_item.(row))}
-          </td>
-          <td :if={@action != []} class="w-0 font-semibold">
-            <div class="flex gap-4">
-              <%= for action <- @action do %>
-                {render_slot(action, @row_item.(row))}
-              <% end %>
-            </div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="overflow-hidden rounded-[2rem] border border-[#F1F3F5] dark:border-white/5 bg-white dark:bg-[#122C36] shadow-soft">
+      <table class="w-full text-left border-collapse">
+        <thead class="bg-[#F9FAFB] dark:bg-white/5 border-b border-[#F1F3F5] dark:border-white/5">
+          <tr>
+            <th :for={col <- @col} class="px-6 py-5 text-[0.75rem] font-extrabold text-[#A0AEC0] uppercase tracking-widest">
+              {col[:label]}
+            </th>
+            <th :if={@action != []} class="px-6 py-5 text-[0.75rem] font-extrabold text-[#A0AEC0] uppercase tracking-widest text-right">
+              {gettext("Actions")}
+            </th>
+          </tr>
+        </thead>
+          <tbody id={@id} phx-update={is_struct(@rows, Phoenix.LiveView.LiveStream) && "stream"} class="divide-y divide-[#F1F3F5] dark:divide-white/5">
+          <tr :for={row <- @rows} id={@row_id && @row_id.(row)} class="hover:bg-[#F9FAFB] dark:hover:bg-white/5 transition-colors group">
+            <td
+              :for={col <- @col}
+              phx-click={@row_click && @row_click.(row)}
+              class={["px-6 py-6 text-sm font-bold text-[#4a5568] dark:text-[#A0AEC0]", @row_click && "cursor-pointer"]}
+            >
+              {render_slot(col, @row_item.(row))}
+            </td>
+            <td :if={@action != []} class="px-6 py-5 text-right">
+              <div class="flex justify-end gap-3">
+                <%= for action <- @action do %>
+                  {render_slot(action, @row_item.(row))}
+                <% end %>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
     """
   end
 
@@ -407,14 +439,81 @@ defmodule MarketMindWeb.CoreComponents do
 
   def list(assigns) do
     ~H"""
-    <ul class="list">
-      <li :for={item <- @item} class="list-row">
-        <div class="list-col-grow">
-          <div class="font-bold">{item.title}</div>
-          <div>{render_slot(item)}</div>
+    <div class="rounded-3xl border border-[#F1F3F5] dark:border-white/5 bg-white dark:bg-[#122C36] overflow-hidden shadow-soft">
+      <dl class="divide-y divide-[#F1F3F5] dark:divide-white/5">
+        <div :for={item <- @item} class="flex flex-col sm:flex-row sm:items-center gap-2 px-6 py-6 hover:bg-[#F9FAFB] dark:hover:bg-white/5 transition-colors">
+          <dt class="text-sm font-extrabold text-[#A0AEC0] sm:w-1/3 shrink-0 uppercase tracking-wider">{item.title}</dt>
+          <dd class="text-sm font-bold text-[#0B222C] dark:text-white">{render_slot(item)}</dd>
         </div>
-      </li>
-    </ul>
+      </dl>
+    </div>
+    """
+  end
+
+  @doc """
+  Renders a modal.
+
+  ## Examples
+
+      <.modal id="confirm-modal">
+        This is a modal.
+      </.modal>
+
+  JS commands may be passed to the `:on_cancel` to configure
+  the closing/canceling of the modal, for example:
+
+      <.modal id="confirm" on_cancel={JS.navigate(~p"/posts")}>
+        Is it confirmed?
+      </.modal>
+  """
+  attr :id, :string, required: true
+  attr :show, :boolean, default: false
+  attr :on_cancel, Phoenix.LiveView.JS, default: %JS{}
+  slot :inner_block, required: true
+
+  def modal(assigns) do
+    ~H"""
+    <div
+      id={@id}
+      phx-mounted={@show && show("##{@id}")}
+      phx-remove={hide("##{@id}")}
+      data-cancel={JS.exec(@on_cancel, "phx-remove")}
+      class="relative z-50 hidden"
+    >
+      <div id={"#{@id}-bg"} class="bg-gray-900/40 fixed inset-0 transition-opacity backdrop-blur-sm" aria-hidden="true" />
+      <div
+        class="fixed inset-0 overflow-y-auto"
+        aria-labelledby={"#{@id}-title"}
+        aria-describedby={"#{@id}-description"}
+        role="dialog"
+        aria-modal="true"
+        tabindex="-1"
+      >
+        <div class="flex min-h-full items-center justify-center p-4 sm:p-6 text-center">
+          <div
+            id={"#{@id}-container"}
+            phx-click-away={JS.exec("data-cancel", to: "##{@id}")}
+            phx-window-keydown={JS.exec("data-cancel", to: "##{@id}")}
+            phx-key="escape"
+            class="relative transform overflow-hidden rounded-[2.5rem] bg-white dark:bg-[#0B222C] p-8 sm:p-12 text-left align-middle shadow-2xl transition-all w-full max-w-2xl border border-[#F1F3F5] dark:border-white/10"
+          >
+            <div class="absolute top-6 right-6">
+              <button
+                phx-click={JS.exec("data-cancel", to: "##{@id}")}
+                type="button"
+                class="size-10 flex items-center justify-center rounded-2xl bg-gray-50 text-[#718096] hover:text-[#1a202c] hover:bg-gray-100 transition-all"
+                aria-label={gettext("close")}
+              >
+                <.icon name="hero-x-mark" class="size-6" />
+              </button>
+            </div>
+            <div id={"#{@id}-content"}>
+              {render_slot(@inner_block)}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
     """
   end
 

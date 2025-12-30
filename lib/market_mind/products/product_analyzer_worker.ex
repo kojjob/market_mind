@@ -161,8 +161,19 @@ defmodule MarketMind.Products.ProductAnalyzerWorker do
     :ok
   end
 
-  defp fail_analysis(project, _reason) do
-    {:ok, updated_project} = Products.update_analysis_status(project, "failed")
+  defp fail_analysis(project, reason) do
+    require Logger
+    error_message = if is_binary(reason), do: reason, else: inspect(reason)
+    Logger.error("Analysis failed for project #{project.id}: #{error_message}")
+
+    # Store error information in analysis_data for debugging
+    error_data = %{
+      "error" => true,
+      "error_message" => error_message,
+      "failed_at" => DateTime.utc_now() |> DateTime.to_iso8601()
+    }
+
+    {:ok, updated_project} = Products.update_analysis_status(project, "failed", error_data)
     broadcast_completion(updated_project, "failed")
   end
 

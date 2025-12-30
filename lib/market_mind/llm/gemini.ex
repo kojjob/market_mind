@@ -34,6 +34,14 @@ defmodule MarketMind.LLM.Gemini do
   # Analysis responses can be 3000+ tokens for complex products
   @default_max_tokens 4096
 
+  # Retry configuration for rate limiting
+  # Gemini free tier: 20 requests/minute, so we wait with exponential backoff
+  @max_retries 3
+  # Delays are configurable via application config for testing
+  # In test mode, we use 1ms delays to speed up tests
+  @default_base_delay_ms 5_000  # Start with 5 seconds
+  @default_max_delay_ms 60_000  # Cap at 60 seconds
+
   @doc """
   Completes a prompt and returns the text response.
 
@@ -185,6 +193,32 @@ defmodule MarketMind.LLM.Gemini do
   defp format_schema(_), do: "{}"
 
   defp make_request(model, api_key, body) do
+    make_request_with_retry(model, api_key, body, 0)
+  end
+
+  defp make_request_with_retry(model, api_key, body, attempt) when attempt >= @max_retries do
+    # Max retries exhausted, make final attempt without retry
+    do_make_request(model, api_key, body)
+  end
+
+  defp make_request_with_retry(model, api_key, body, attempt) do
+    case do_make_request(model, api_key, body) do
+      {:error, {:rate_limited, message}} = error ->
+        if attempt < @max_retries do
+          delay = calculate_backoff_delay(attempt)
+          log_rate_limit_retry(attempt, delay, message)
+          Process.sleep(delay)
+          make_request_with_retry(model, api_key, body, attempt + 1)
+        else
+          error
+        end
+
+      result ->
+        result
+    end
+  end
+
+  defp do_make_request(model, api_key, body) do
     url = "#{@base_url}/#{model}:generateContent?key=#{api_key}"
 
     req =
@@ -219,6 +253,35 @@ defmodule MarketMind.LLM.Gemini do
       e in Req.TransportError ->
         {:error, {:network_error, e.reason}}
     end
+  end
+
+  defp calculate_backoff_delay(attempt) do
+    {base_delay, max_delay} = get_retry_delays()
+    # Exponential backoff: base_delay * 2^attempt, with jitter
+    base = base_delay * :math.pow(2, attempt) |> round()
+    capped = min(base, max_delay)
+    # Add random jitter (0-25% of delay) to prevent thundering herd
+    # In test mode with 1ms delays, jitter = 0 (div(0, 4) = 0)
+    jitter = if capped > 0, do: :rand.uniform(max(div(capped, 4), 1)), else: 0
+    capped + jitter
+  end
+
+  defp get_retry_delays do
+    # In test mode, use minimal delays to speed up tests
+    if Application.get_env(:market_mind, :env) == :test do
+      {1, 1}  # 1ms delays in test mode
+    else
+      {@default_base_delay_ms, @default_max_delay_ms}
+    end
+  end
+
+  defp log_rate_limit_retry(attempt, delay, message) do
+    require Logger
+
+    Logger.warning(
+      "[Gemini] Rate limited (attempt #{attempt + 1}/#{@max_retries}). " <>
+        "Retrying in #{div(delay, 1000)}s. Reason: #{message}"
+    )
   end
 
   defp maybe_attach_test_adapter(req) do

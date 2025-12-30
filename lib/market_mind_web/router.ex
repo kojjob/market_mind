@@ -35,15 +35,15 @@ defmodule MarketMindWeb.Router do
   scope "/p", MarketMindWeb.Public do
     pipe_through :browser
 
+    # Email unsubscribe flow (must come BEFORE wildcard routes)
+    get "/unsubscribe/:token", UnsubscribeController, :show
+    post "/unsubscribe/:token", UnsubscribeController, :unsubscribe
+
     # Lead magnet landing pages
     live "/:project_slug/:slug", LeadMagnetLive, :show
 
     # Lead magnet file downloads (after email capture)
     get "/:project_slug/:slug/download/:subscriber_id", LeadMagnetController, :download
-
-    # Email unsubscribe flow
-    get "/unsubscribe/:token", UnsubscribeController, :show
-    post "/unsubscribe/:token", UnsubscribeController, :unsubscribe
   end
 
   # Other scopes may use custom stacks.

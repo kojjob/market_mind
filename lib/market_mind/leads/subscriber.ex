@@ -60,10 +60,10 @@ defmodule MarketMind.Leads.Subscriber do
       :project_id
     ])
     |> validate_required([:email, :project_id])
+    |> normalize_email()
     |> validate_format(:email, ~r/^[^\s]+@[^\s]+$/, message: "must be a valid email")
     |> validate_inclusion(:status, @valid_statuses)
     |> validate_inclusion(:source, @valid_sources, message: "must be one of: #{Enum.join(@valid_sources, ", ")}")
-    |> normalize_email()
     |> unique_constraint([:email, :project_id], message: "is already subscribed")
   end
 

@@ -7,6 +7,9 @@
     <.live_title default="MarketMind" suffix=" · Phoenix Framework">
       {assigns[:page_title]}
     </.live_title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap" rel="stylesheet">
     <link phx-track-static rel="stylesheet" href={~p"/assets/css/app.css"} />
     <script defer phx-track-static type="text/javascript" src={~p"/assets/js/app.js"}>
     </script>
@@ -30,7 +33,7 @@
       })();
     </script>
   </head>
-  <body class="antialiased bg-zinc-950">
+  <body class="antialiased bg-[#f8f7fa] dark:bg-[#25293c] text-[#6f6b7d] dark:text-[#b6bee3] font-sans">
     {@inner_content}
   </body>
 </html>

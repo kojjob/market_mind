@@ -25,6 +25,9 @@ defmodule MarketMindWeb.Public.LeadMagnetLive do
 
   @impl true
   def mount(%{"project_slug" => project_slug, "slug" => slug}, _session, socket) do
+    # Capture consent info during mount (only time connect_info is available)
+    consent_info = build_consent_info(socket)
+
     case fetch_lead_magnet(project_slug, slug) do
       {:ok, lead_magnet} ->
         {:ok,
@@ -34,7 +37,8 @@ defmodule MarketMindWeb.Public.LeadMagnetLive do
          |> assign(:form, to_form(%{"email" => "", "first_name" => ""}))
          |> assign(:submitted, false)
          |> assign(:error, nil)
-         |> assign(:page_title, lead_magnet.title)}
+         |> assign(:page_title, lead_magnet.title)
+         |> assign(:consent_info, consent_info)}
 
       {:error, :not_found} ->
         {:ok,
@@ -55,8 +59,8 @@ defmodule MarketMindWeb.Public.LeadMagnetLive do
     lead_magnet = socket.assigns.lead_magnet
     project = socket.assigns.project
 
-    # Build consent info from connection
-    consent_info = build_consent_info(socket)
+    # Use consent info captured during mount (get_connect_info only available in mount)
+    consent_info = socket.assigns.consent_info
 
     attrs = %{
       email: email,
@@ -111,71 +115,67 @@ defmodule MarketMindWeb.Public.LeadMagnetLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
-      <div class="max-w-4xl mx-auto px-4 py-16 sm:px-6 lg:px-8">
+    <div class="min-h-screen bg-[#f8fafc] font-sans antialiased">
+      <div class="max-w-4xl mx-auto px-6 py-20 sm:px-8 lg:px-12">
         <%= if @submitted do %>
           <!-- Thank You State -->
-          <div class="text-center">
-            <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-6">
-              <svg class="h-8 w-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-              </svg>
+          <div class="text-center animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <div class="mx-auto flex items-center justify-center size-24 rounded-3xl bg-primary/10 text-primary mb-10 shadow-xl shadow-primary/5">
+              <.icon name="hero-check-badge" class="size-12" />
             </div>
 
-            <h1 class="text-3xl font-bold text-gray-900 mb-4">
+            <h1 class="text-4xl font-bold text-[#1a202c] mb-6 tracking-tight">
               You're In!
             </h1>
 
-            <div class="prose prose-lg mx-auto text-gray-600 mb-8">
+            <div class="prose prose-lg mx-auto text-[#4a5568] mb-12 leading-relaxed">
               <%= if @lead_magnet.thank_you_message do %>
                 <%= raw(@lead_magnet.thank_you_message) %>
               <% else %>
-                <p>Thank you for subscribing! Check your email for your download link.</p>
+                <p class="font-medium">Thank you for subscribing! Check your email for your download link.</p>
               <% end %>
             </div>
 
             <%= if @lead_magnet.download_url do %>
               <a
                 href={@lead_magnet.download_url}
-                class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                class="inline-flex items-center px-10 py-5 rounded-2xl text-white bg-primary hover:bg-primary/90 transition-all shadow-xl shadow-primary/20 font-bold text-lg"
               >
-                <svg class="mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                </svg>
+                <.icon name="hero-arrow-down-tray" class="mr-3 size-6" />
                 Download Now
               </a>
             <% end %>
           </div>
         <% else %>
           <!-- Landing Page State -->
-          <div class="text-center mb-12">
-            <div class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800 mb-4">
-              Free <%= String.capitalize(@lead_magnet.magnet_type) %>
+          <div class="text-center mb-16 animate-in fade-in slide-in-from-top-4 duration-700">
+            <div class="inline-flex items-center px-4 py-1.5 rounded-full text-xs font-bold bg-primary/10 text-primary uppercase tracking-widest mb-6">
+              Free {@lead_magnet.magnet_type}
             </div>
 
-            <h1 class="text-4xl sm:text-5xl font-extrabold text-gray-900 tracking-tight mb-4">
-              <%= @lead_magnet.headline || @lead_magnet.title %>
+            <h1 class="text-4xl sm:text-6xl font-extrabold text-[#1a202c] tracking-tight mb-8 leading-[1.1]">
+              {@lead_magnet.headline || @lead_magnet.title}
             </h1>
 
             <%= if @lead_magnet.subheadline do %>
-              <p class="text-xl text-gray-600 max-w-2xl mx-auto">
-                <%= @lead_magnet.subheadline %>
+              <p class="text-xl text-[#718096] max-w-2xl mx-auto font-medium leading-relaxed">
+                {@lead_magnet.subheadline}
               </p>
             <% end %>
           </div>
 
-          <div class="bg-white rounded-2xl shadow-xl overflow-hidden max-w-xl mx-auto">
-            <div class="px-6 py-8 sm:p-10">
+          <div class="bg-white rounded-[2.5rem] shadow-2xl shadow-gray-200/50 overflow-hidden max-w-xl mx-auto border border-[#edf2f7]">
+            <div class="px-8 py-12 sm:p-16">
               <%= if @lead_magnet.description do %>
-                <p class="text-gray-600 mb-6 text-center">
-                  <%= @lead_magnet.description %>
+                <p class="text-[#4a5568] mb-10 text-center text-lg font-medium leading-relaxed">
+                  {@lead_magnet.description}
                 </p>
               <% end %>
 
-              <.form for={@form} phx-submit="submit" class="space-y-4">
-                <div>
-                  <label for="first_name" class="block text-sm font-medium text-gray-700 mb-1">
-                    First Name <span class="text-gray-400">(optional)</span>
+              <.form for={@form} phx-submit="submit" class="space-y-6">
+                <div class="space-y-2">
+                  <label for="first_name" class="block text-sm font-bold text-[#1a202c] ml-1">
+                    First Name <span class="text-[#718096] font-medium">(optional)</span>
                   </label>
                   <input
                     type="text"
@@ -183,12 +183,12 @@ defmodule MarketMindWeb.Public.LeadMagnetLive do
                     id="first_name"
                     value={@form.params["first_name"]}
                     placeholder="Your first name"
-                    class="block w-full px-4 py-3 rounded-lg border border-gray-300 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    class="block w-full px-6 py-4 rounded-2xl border-[#edf2f7] bg-gray-50/50 focus:bg-white focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-[#1a202c] font-medium placeholder:text-[#a0aec0]"
                   />
                 </div>
 
-                <div>
-                  <label for="email" class="block text-sm font-medium text-gray-700 mb-1">
+                <div class="space-y-2">
+                  <label for="email" class="block text-sm font-bold text-[#1a202c] ml-1">
                     Email Address <span class="text-red-500">*</span>
                   </label>
                   <input
@@ -198,31 +198,29 @@ defmodule MarketMindWeb.Public.LeadMagnetLive do
                     value={@form.params["email"]}
                     placeholder="you@example.com"
                     required
-                    class="block w-full px-4 py-3 rounded-lg border border-gray-300 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    class="block w-full px-6 py-4 rounded-2xl border-[#edf2f7] bg-gray-50/50 focus:bg-white focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-[#1a202c] font-medium placeholder:text-[#a0aec0]"
                   />
                 </div>
 
                 <%= if @error do %>
-                  <div class="rounded-md bg-red-50 p-3">
-                    <div class="flex">
-                      <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-                      </svg>
-                      <p class="ml-2 text-sm text-red-700"><%= @error %></p>
+                  <div class="rounded-2xl bg-red-50 p-4 border border-red-100 animate-in shake duration-500">
+                    <div class="flex items-center gap-3">
+                      <.icon name="hero-exclamation-circle" class="size-5 text-red-500" />
+                      <p class="text-sm text-red-700 font-bold">{@error}</p>
                     </div>
                   </div>
                 <% end %>
 
                 <button
                   type="submit"
-                  class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-base font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+                  class="w-full flex justify-center py-5 px-8 rounded-2xl shadow-xl shadow-primary/20 text-lg font-bold text-white bg-primary hover:bg-primary/90 focus:ring-4 focus:ring-primary/20 transition-all active:scale-[0.98]"
                 >
-                  <%= @lead_magnet.cta_text || "Get Free Access" %>
+                  {@lead_magnet.cta_text || "Get Free Access"}
                 </button>
 
-                <p class="text-xs text-gray-500 text-center mt-4">
-                  By subscribing, you agree to receive emails from <%= @project.name %>.
-                  You can unsubscribe at any time.
+                <p class="text-xs text-[#718096] text-center mt-8 font-medium leading-relaxed">
+                  By subscribing, you agree to receive emails from {@project.name}.
+                  <br />You can unsubscribe at any time.
                 </p>
               </.form>
             </div>
@@ -230,11 +228,15 @@ defmodule MarketMindWeb.Public.LeadMagnetLive do
 
           <!-- Content Preview (if available) -->
           <%= if @lead_magnet.content do %>
-            <div class="mt-12 max-w-2xl mx-auto">
-              <h2 class="text-lg font-semibold text-gray-900 mb-4 text-center">
-                What's Inside
-              </h2>
-              <div class="bg-white rounded-lg shadow p-6 prose prose-indigo max-w-none">
+            <div class="mt-20 max-w-2xl mx-auto">
+              <div class="flex items-center gap-4 mb-8 justify-center">
+                <div class="h-px w-12 bg-[#edf2f7]"></div>
+                <h2 class="text-sm font-bold text-[#718096] uppercase tracking-widest">
+                  What's Inside
+                </h2>
+                <div class="h-px w-12 bg-[#edf2f7]"></div>
+              </div>
+              <div class="bg-white rounded-3xl shadow-sm border border-[#edf2f7] p-10 prose prose-primary max-w-none text-[#4a5568]">
                 <%= raw(preview_content(@lead_magnet.content)) %>
               </div>
             </div>
@@ -242,8 +244,10 @@ defmodule MarketMindWeb.Public.LeadMagnetLive do
         <% end %>
 
         <!-- Footer -->
-        <div class="mt-16 text-center text-sm text-gray-500">
-          <p>Powered by <%= @project.name %></p>
+        <div class="mt-24 text-center">
+          <p class="text-sm font-bold text-[#a0aec0] uppercase tracking-widest">
+            Powered by <span class="text-[#718096]">{@project.name}</span>
+          </p>
         </div>
       </div>
     </div>

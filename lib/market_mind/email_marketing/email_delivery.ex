@@ -74,7 +74,7 @@ defmodule MarketMind.EmailMarketing.EmailDelivery do
     delivery
     |> change(%{
       status: "sent",
-      sent_at: DateTime.utc_now()
+      sent_at: DateTime.utc_now() |> DateTime.truncate(:second)
     })
   end
 
@@ -96,7 +96,7 @@ defmodule MarketMind.EmailMarketing.EmailDelivery do
     delivery
     |> change(%{
       status: "opened",
-      opened_at: DateTime.utc_now()
+      opened_at: DateTime.utc_now() |> DateTime.truncate(:second)
     })
   end
 
@@ -107,7 +107,7 @@ defmodule MarketMind.EmailMarketing.EmailDelivery do
     delivery
     |> change(%{
       status: "clicked",
-      clicked_at: DateTime.utc_now()
+      clicked_at: DateTime.utc_now() |> DateTime.truncate(:second)
     })
   end
 

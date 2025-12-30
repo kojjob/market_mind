@@ -82,7 +82,7 @@ defmodule MarketMind.LeadMagnets.LeadMagnet do
     |> validate_inclusion(:magnet_type, @valid_types, message: "must be one of: #{Enum.join(@valid_types, ", ")}")
     |> validate_inclusion(:status, @valid_statuses)
     |> generate_slug()
-    |> unique_constraint([:project_id, :slug])
+    |> unique_constraint([:project_id, :slug], error_key: :slug)
   end
 
   @doc """

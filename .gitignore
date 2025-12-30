@@ -36,3 +36,10 @@ npm-debug.log
 /assets/node_modules/
 
 .DS_Store
+
+# IDE and tool directories
+.taskmaster/
+.vscode/
+
+# Temporary test scripts
+test_*.exs

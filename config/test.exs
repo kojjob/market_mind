@@ -40,5 +40,11 @@ config :market_mind, Oban, testing: :inline
 # Use mock LLM client in tests
 config :market_mind, :llm_client, MarketMind.LLM.Mock
 
+# Configure Swoosh test adapter
+config :market_mind, MarketMind.Mailer, adapter: Swoosh.Adapters.Test
+
+# Disable Swoosh API client in tests
+config :swoosh, :api_client, false
+
 # Set environment for conditional test adapters
 config :market_mind, :env, :test
