@@ -25,7 +25,7 @@ defmodule MarketMindWeb.Public.LeadMagnetControllerTest do
     test "redirects to external URL when download_url is present", %{
       conn: conn,
       project: project,
-      subscriber: subscriber
+      subscriber: _subscriber
     } do
       lead_magnet = active_lead_magnet_fixture(project, %{
         title: "External Resource",
